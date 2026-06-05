@@ -15,20 +15,20 @@ interface PetalParticle {
 }
 
 const PETAL_SHAPES = [
-  "M 0 0 C 10 -15 20 -15 30 0 C 20 15 10 15 0 0 Z", // Basic petal
-  "M 0 0 C 15 -10 15 -20 0 -30 C -15 -20 -15 -10 0 0 Z", // Heartish leaf
-  "M 0 0 C 8 -20 22 -20 30 -5 C 20 10 10 15 0 0 Z", // Asymmetric leaf
-  "M 0 0 C 10 -10 25 -5 20 15 C 10 20 0 10 0 0 Z"   // Round petal
+  "M 0 0 C 10 -15 20 -15 30 0 C 20 15 10 15 0 0 Z",
+  "M 0 0 C 15 -10 15 -20 0 -30 C -15 -20 -15 -10 0 0 Z",
+  "M 0 0 C 8 -20 22 -20 30 -5 C 20 10 10 15 0 0 Z",
+  "M 0 0 C 10 -10 25 -5 20 15 C 10 20 0 10 0 0 Z",
 ];
 
 const PETAL_COLORS = [
-  "#FFB7B2", // Pastel Pink
-  "#FFC6FF", // Light Magenta
-  "#FFD1DC", // Rose Pink
-  "#FFF0F5", // Lavender Blush
-  "#FFE4E1", // Misty Rose
-  "#FFC0CB", // Pink
-  "#FFE5EC", // Soft Pink
+  "#FFB7B2",
+  "#FFC6FF",
+  "#FFD1DC",
+  "#FFF0F5",
+  "#FFE4E1",
+  "#FFC0CB",
+  "#FFE5EC",
 ];
 
 interface GiftBoxHeroProps {
@@ -42,16 +42,15 @@ export default function GiftBoxHero({ onOpenComplete }: GiftBoxHeroProps) {
   const boxBodyRef = useRef<SVGGElement>(null);
   const washRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
-  
+
   const [petals, setPetals] = useState<PetalParticle[]>([]);
   const [isClicked, setIsClicked] = useState(false);
 
-  // Floating ambient animation for the gift box before click
+  // Floating ambient animation
   useGSAP(
     () => {
       if (isClicked) return;
 
-      // Floating loop
       gsap.to(boxWrapperRef.current, {
         y: -15,
         rotation: 2,
@@ -61,7 +60,6 @@ export default function GiftBoxHero({ onOpenComplete }: GiftBoxHeroProps) {
         ease: "power1.inOut",
       });
 
-      // Lid subtle lift loop
       gsap.to(lidRef.current, {
         y: -3,
         duration: 1.5,
@@ -77,7 +75,6 @@ export default function GiftBoxHero({ onOpenComplete }: GiftBoxHeroProps) {
     if (isClicked) return;
     setIsClicked(true);
 
-    // Generate 120 petals for the explosion
     const generatedPetals: PetalParticle[] = Array.from({ length: 120 }).map((_, i) => {
       const angle = Math.random() * Math.PI * 2;
       const distance = 40 + Math.random() * 120;
@@ -94,14 +91,8 @@ export default function GiftBoxHero({ onOpenComplete }: GiftBoxHeroProps) {
 
     setPetals(generatedPetals);
 
-    // Trigger GSAP timeline
-    const tl = gsap.timeline({
-      onComplete: () => {
-        onOpenComplete();
-      },
-    });
+    const tl = gsap.timeline({ onComplete: onOpenComplete });
 
-    // Stop floating, pop box, throw lid
     tl.to(boxWrapperRef.current, {
       y: 0,
       scale: 1.1,
@@ -109,15 +100,13 @@ export default function GiftBoxHero({ onOpenComplete }: GiftBoxHeroProps) {
       ease: "back.out(2)",
     });
 
-    // Hide text instantly or fade it out
     tl.to(textRef.current, {
       opacity: 0,
       y: -20,
       duration: 0.3,
-      ease: "power2.out"
+      ease: "power2.out",
     }, 0);
 
-    // Throw the lid away
     tl.to(lidRef.current, {
       y: -300,
       x: 100,
@@ -127,7 +116,6 @@ export default function GiftBoxHero({ onOpenComplete }: GiftBoxHeroProps) {
       ease: "power3.out",
     }, 0.1);
 
-    // Subtle scale-down of box body
     tl.to(boxBodyRef.current, {
       scale: 0.85,
       transformOrigin: "center bottom",
@@ -135,15 +123,9 @@ export default function GiftBoxHero({ onOpenComplete }: GiftBoxHeroProps) {
       ease: "power2.inOut",
     }, 0.1);
 
-    // Petal explosion animation
     tl.fromTo(
       ".petal-particle",
-      {
-        x: 0,
-        y: 0,
-        scale: 0.1,
-        opacity: 0,
-      },
+      { x: 0, y: 0, scale: 0.1, opacity: 0 },
       {
         x: (i) => generatedPetals[i].x * 4,
         y: (i) => generatedPetals[i].y * 4,
@@ -151,40 +133,26 @@ export default function GiftBoxHero({ onOpenComplete }: GiftBoxHeroProps) {
         scale: (i) => generatedPetals[i].scale,
         opacity: 0.9,
         duration: 1.2,
-        stagger: {
-          each: 0.005,
-          from: "random",
-        },
+        stagger: { each: 0.005, from: "random" },
         ease: "power4.out",
       },
       0.15
     );
 
-    // FIX IMPLEMENTASI: Efek mawar raksasa mekar membesar dan sedikit berputar menutup layar
+    // FIX #1: Wash sekarang menggunakan `position: fixed` via inline style
+    // dan TIDAK menggunakan inset-0 dari className yang konflik dengan
+    // manual left/top/width/height. transformOrigin dijamin "50% 50%"
+    // sehingga scale dari 0 → 1 selalu expand dari tengah layar.
     tl.fromTo(
       washRef.current,
-      {
-        scale: 0,
-        rotation: -45,
-        opacity: 0,
-      },
-      {
-        scale: 1,
-        rotation: 15,
-        opacity: 1,
-        duration: 1.3,
-        ease: "power3.inOut",
-      },
+      { scale: 0, rotation: -45, opacity: 0 },
+      { scale: 1, rotation: 15, opacity: 1, duration: 1.3, ease: "power3.inOut" },
       0.5
     );
 
-    // Fade out everything else di belakang penutup mawar
     tl.to(
       [boxBodyRef.current, ".petal-particle"],
-      {
-        opacity: 0,
-        duration: 0.4,
-      },
+      { opacity: 0, duration: 0.4 },
       1.1
     );
   };
@@ -194,7 +162,7 @@ export default function GiftBoxHero({ onOpenComplete }: GiftBoxHeroProps) {
       ref={containerRef}
       className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#170E0D]/95 backdrop-blur-md overflow-hidden select-none"
     >
-      {/* Background ambient petal shapes */}
+      {/* Ambient background blobs */}
       <div className="absolute inset-0 pointer-events-none opacity-20">
         <div className="absolute top-[10%] left-[15%] w-8 h-8 rounded-full bg-[#FFB7B2] blur-sm animate-pulse-slow" />
         <div className="absolute bottom-[20%] right-[10%] w-12 h-12 rounded-full bg-[#FFE4E1] blur-md animate-pulse-slow" />
@@ -203,7 +171,7 @@ export default function GiftBoxHero({ onOpenComplete }: GiftBoxHeroProps) {
 
       {/* Main interactive area */}
       <div className="relative z-10 flex flex-col items-center">
-        {/* Animated text prompt */}
+        {/* Text prompt */}
         <div
           ref={textRef}
           className="text-center mb-16 px-4 cursor-pointer"
@@ -217,7 +185,7 @@ export default function GiftBoxHero({ onOpenComplete }: GiftBoxHeroProps) {
           </h1>
         </div>
 
-        {/* Gift Box Container */}
+        {/* Gift Box */}
         <div
           ref={boxWrapperRef}
           onClick={handleOpenBox}
@@ -227,49 +195,24 @@ export default function GiftBoxHero({ onOpenComplete }: GiftBoxHeroProps) {
             viewBox="0 0 200 200"
             className="w-full h-full filter drop-shadow-[0_20px_35px_rgba(255,183,178,0.25)]"
           >
-            {/* Box Body Group */}
             <g ref={boxBodyRef}>
-              {/* Main Box Rect */}
               <rect x="50" y="80" width="100" height="90" rx="8" fill="#FFF1F0" />
-              {/* Lid Lip Underlay */}
               <rect x="46" y="76" width="108" height="8" rx="2" fill="#E6D3D1" />
-              {/* Shadow inside */}
               <path d="M 50 80 L 150 80 L 150 90 L 50 90 Z" fill="#2A1F1D" opacity="0.06" />
-              {/* Ribbon Vertical */}
               <rect x="90" y="80" width="20" height="90" fill="#FFB7B2" />
-              {/* Ribbon Horizontal */}
               <rect x="50" y="115" width="100" height="20" fill="#FFB7B2" />
-              {/* Golden Clasp Circle */}
               <circle cx="100" cy="125" r="8" fill="#FFFBF9" stroke="#FFB7B2" strokeWidth="2" />
             </g>
 
-            {/* Gift Box Lid Group */}
             <g ref={lidRef}>
-              {/* Lid Rect */}
               <rect x="44" y="52" width="112" height="26" rx="4" fill="#FFE5EC" />
-              {/* Ribbon Vertical Lid */}
               <rect x="90" y="52" width="20" height="26" fill="#FFB7B2" />
-              
-              {/* Ribbon Bow Left */}
-              <path
-                d="M 90 52 C 65 30 65 15 88 44 Z"
-                fill="#FFB7B2"
-                stroke="#FFB7B2"
-                strokeWidth="1"
-              />
-              {/* Ribbon Bow Right */}
-              <path
-                d="M 110 52 C 135 30 135 15 112 44 Z"
-                fill="#FFB7B2"
-                stroke="#FFB7B2"
-                strokeWidth="1"
-              />
-              {/* Bow Center knot */}
+              <path d="M 90 52 C 65 30 65 15 88 44 Z" fill="#FFB7B2" stroke="#FFB7B2" strokeWidth="1" />
+              <path d="M 110 52 C 135 30 135 15 112 44 Z" fill="#FFB7B2" stroke="#FFB7B2" strokeWidth="1" />
               <rect x="92" y="46" width="16" height="10" rx="2" fill="#FFE5EC" stroke="#FFB7B2" strokeWidth="2" />
             </g>
           </svg>
 
-          {/* Render Exploding Petals */}
           {petals.map((petal) => (
             <svg
               key={petal.id}
@@ -287,37 +230,38 @@ export default function GiftBoxHero({ onOpenComplete }: GiftBoxHeroProps) {
         </div>
       </div>
 
-      {/* SCREEN WASH FIX: Sekarang berisi lapisan kelopak mawar mewah untuk transisi penuh */}
+      {/*
+        FIX #1: Wash overlay sekarang menggunakan position:fixed dengan
+        left/top dihitung secara manual ke tengah viewport (50% - 160vmax).
+        Kelas `inset-0` DIHAPUS karena konflik dengan manual left/top/width/height.
+        transformOrigin diatur eksplisit ke "center" agar GSAP scale(0→1)
+        selalu mengembang dari pusat layar dan dijamin menutup penuh.
+        z-index lebih tinggi dari konten box agar selalu di depan.
+      */}
       <div
         ref={washRef}
-        className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-0"
+        className="pointer-events-none flex items-center justify-center opacity-0"
         style={{
-          transformOrigin: "center center",
-          transform: "scale(0)",
+          position: "fixed",
           width: "320vmax",
           height: "320vmax",
           left: "calc(50% - 160vmax)",
           top: "calc(50% - 160vmax)",
+          transformOrigin: "center center",
+          zIndex: 60,
         }}
       >
-        {/* Layered Luxury SVG Rose Blossom yang menutup layar penuh saat di-scale raksasa */}
-        <svg
-          viewBox="0 0 200 200"
-          className="w-full h-full transform scale-105"
-        >
-          {/* Outermost Ring - Memastikan penutupan layar 100% rapat */}
+        <svg viewBox="0 0 200 200" className="w-full h-full">
+          {/* Layer dasar — memastikan tidak ada celah putih */}
           <circle cx="100" cy="100" r="100" fill="#FFE5EC" />
           <path d="M100 0 C140 0, 200 60, 200 100 C200 140, 140 200, 100 200 C60 200, 0 140, 0 100 C0 60, 60 0, 100 0 Z" fill="#FFE4E1" />
-          
-          {/* Kelopak Mawar Lapisan Luar */}
+          {/* Kelopak luar */}
           <path d="M100 10 C150 10, 190 50, 190 100 C190 150, 150 190, 100 190 C50 190, 10 150, 10 100 C10 50, 50 100, 100 10 Z" fill="#FFD1DC" opacity="0.95" />
           <path d="M100 25 C140 25, 175 60, 175 100 C175 140, 140 175, 100 175 C60 175, 25 140, 25 100 C25 60, 60 25, 100 25 Z" fill="#FFB7B2" />
-          
-          {/* Kelopak Mawar Lapisan Tengah */}
+          {/* Kelopak tengah */}
           <path d="M100 40 C130 40, 160 70, 160 100 C160 130, 130 160, 100 160 C70 160, 40 130, 40 100 C40 70, 70 40, 100 40 Z" fill="#FFC0CB" />
           <path d="M100 55 C125 55, 145 75, 145 100 C145 125, 125 145, 100 145 C75 145, 55 125, 55 100 C55 75, 75 55, 100 55 Z" fill="#FFAAA6" />
-          
-          {/* Kelopak Mawar Lapisan Inti / Dalam */}
+          {/* Inti */}
           <path d="M100 70 C115 70, 130 85, 130 100 C130 115, 115 130, 100 130 C85 130, 70 115, 70 100 C70 85, 85 70, 100 70 Z" fill="#FF8B94" />
           <circle cx="100" cy="100" r="18" fill="#FF6B6B" />
         </svg>
