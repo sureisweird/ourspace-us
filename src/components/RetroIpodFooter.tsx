@@ -8,7 +8,7 @@ import { Play, Pause, CaretRight, CaretLeft, Heart, MusicNote } from "@phosphor-
 //   1. Taruh file lagu di folder: /public/music/our-song.mp3
 //   2. Ubah SONG_SRC di bawah menjadi "/music/our-song.mp3"
 //   Format yang didukung: .mp3, .ogg, .wav, .aac
-const SONG_SRC = "/music/Backstreet Boys - Shape Of My Heart (320).mp3";
+export const SONG_SRC = "/music/Backstreet Boys - Shape Of My Heart (320).mp3";
 
 // Judul & artis yang tampil di layar iPod
 const SONG_META = {
@@ -17,7 +17,11 @@ const SONG_META = {
   album: "Life Together",
 };
 
-export default function RetroIpodFooter() {
+interface RetroIpodFooterProps {
+  audioRef: React.RefObject<HTMLAudioElement | null>;
+}
+
+export default function RetroIpodFooter({ audioRef }: RetroIpodFooterProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -25,7 +29,6 @@ export default function RetroIpodFooter() {
   const [audioAvailable, setAudioAvailable] = useState(true);
 
   const vinylRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
   const rotateTween = useRef<gsap.core.Tween | null>(null);
 
   // FIX #2: progress diturunkan langsung dari currentTime & duration audio,
@@ -61,6 +64,19 @@ export default function RetroIpodFooter() {
     const audio = audioRef.current;
     if (!audio) return;
 
+    // Sync initial state if audio is already playing/loaded/errored from page-level trigger
+    setIsPlaying(!audio.paused);
+    setCurrentTime(audio.currentTime);
+    if (audio.duration) {
+      setDuration(audio.duration);
+    }
+    if (audio.error) {
+      setAudioAvailable(false);
+      setDuration(365);
+    } else {
+      setAudioAvailable(true);
+    }
+
     // Sinkronkan waktu ke state setiap kali audio update
     const onTimeUpdate = () => setCurrentTime(audio.currentTime);
 
@@ -94,7 +110,7 @@ export default function RetroIpodFooter() {
       audio.removeEventListener("ended", onEnded);
       audio.removeEventListener("error", onError);
     };
-  }, []);
+  }, [audioRef]);
 
   // ── Fallback: jika tidak ada audio, simulasi progress visual ────────────
   // Mode ini aktif jika SONG_SRC tidak ditemukan (audioAvailable = false)
@@ -181,13 +197,6 @@ export default function RetroIpodFooter() {
       id="letter"
       className="py-32 px-6 max-w-7xl mx-auto relative z-10 border-t border-[#F2E5E3]"
     >
-      <audio
-        ref={audioRef}
-        src={SONG_SRC}
-        preload="metadata"
-        aria-hidden="true"
-      />
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
 
         {/* Left Column - Retro iPod UI */}
