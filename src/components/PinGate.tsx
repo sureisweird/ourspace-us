@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Heart, LockKey } from "@phosphor-icons/react";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -34,35 +34,7 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
     inputRefs.current[0]?.focus();
   }, []);
 
-  const handleChange = (index: number, value: string) => {
-    // Hanya terima angka
-    if (!/^\d?$/.test(value)) return;
-
-    const newInput = [...input];
-    newInput[index] = value;
-    setInput(newInput);
-    setError(false);
-
-    // Auto-advance ke input berikutnya
-    if (value && index < 3) {
-      inputRefs.current[index + 1]?.focus();
-    }
-
-    // Auto-submit saat 4 digit terisi
-    if (value && index === 3) {
-      const pin = [...newInput.slice(0, 3), value].join("");
-      handleVerify(pin);
-    }
-  };
-
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Backspace: hapus dan kembali ke input sebelumnya
-    if (e.key === "Backspace" && !input[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleVerify = (pin: string) => {
+  const handleVerify = useCallback((pin: string) => {
     if (pin === PIN_CODE) {
       sessionStorage.setItem(SESSION_KEY, "true");
       onUnlocked();
@@ -75,6 +47,52 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
         setInput(["", "", "", ""]);
         inputRefs.current[0]?.focus();
       }, 600);
+    }
+  }, [onUnlocked]);
+
+  // Auto-verify saat 4 digit terisi lengkap (dijalankan di tick berikutnya untuk mencegah cascading renders)
+  useEffect(() => {
+    const pin = input.join("");
+    if (pin.length === 4) {
+      const timer = setTimeout(() => {
+        handleVerify(pin);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [input, handleVerify]);
+
+  const handleChange = (index: number, value: string) => {
+    // Ambil karakter terakhir jika user mengetik/menimpa
+    const val = value.slice(-1);
+
+    // Hanya terima angka atau string kosong (saat didelete)
+    if (value !== "" && !/^\d$/.test(val)) return;
+
+    setError(false);
+
+    setInput((prev) => {
+      const newInput = [...prev];
+      newInput[index] = val;
+      return newInput;
+    });
+
+    // Auto-advance ke input berikutnya jika diisi
+    if (val && index < 3) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace") {
+      if (!input[index] && index > 0) {
+        // Fokus ke input sebelumnya dan hapus nilainya
+        setInput((prev) => {
+          const newInput = [...prev];
+          newInput[index - 1] = "";
+          return newInput;
+        });
+        inputRefs.current[index - 1]?.focus();
+      }
     }
   };
 
@@ -129,6 +147,7 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
               value={digit}
               onChange={(e) => handleChange(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(i, e)}
+              onFocus={(e) => e.target.select()}
               className={`w-14 h-14 text-center text-2xl font-mono rounded-xl border-2 bg-[#FFFBF9]/5 text-[#FFFBF9] outline-none transition-all duration-200 caret-transparent
                 ${error
                   ? "border-[#FF6B6B] bg-[#FF6B6B]/10"
