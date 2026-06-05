@@ -33,9 +33,10 @@ const PETAL_COLORS = [
 
 interface GiftBoxHeroProps {
   onOpenComplete: () => void;
+  audioRef: React.RefObject<HTMLAudioElement | null>;
 }
 
-export default function GiftBoxHero({ onOpenComplete }: GiftBoxHeroProps) {
+export default function GiftBoxHero({ onOpenComplete, audioRef }: GiftBoxHeroProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const boxWrapperRef = useRef<HTMLDivElement>(null);
   const lidRef = useRef<SVGGElement>(null);
@@ -73,7 +74,13 @@ export default function GiftBoxHero({ onOpenComplete }: GiftBoxHeroProps) {
 
   const handleOpenBox = () => {
     if (isClicked) return;
-    setIsClicked(true);
+
+    // Start playing the music immediately on user interaction to satisfy browser autoplay policy
+    if (audioRef.current) {
+      audioRef.current.play().catch((err) => {
+        console.warn("Autoplay was blocked or failed:", err);
+      });
+    }
 
     const generatedPetals: PetalParticle[] = Array.from({ length: 120 }).map((_, i) => {
       const angle = Math.random() * Math.PI * 2;
@@ -89,73 +96,88 @@ export default function GiftBoxHero({ onOpenComplete }: GiftBoxHeroProps) {
       };
     });
 
+    // FIX: set state dulu, lalu biarkan timeline dibangun di useGSAP di bawah
+    // SETELAH React me-render elemen .petal-particle ke DOM. Sebelumnya timeline
+    // dibuat langsung di sini, sehingga selector ".petal-particle" mendapat 0
+    // target (petals belum ter-render) → animasi ledakan kelopak tidak pernah
+    // jalan.
     setPetals(generatedPetals);
-
-    const tl = gsap.timeline({ onComplete: onOpenComplete });
-
-    tl.to(boxWrapperRef.current, {
-      y: 0,
-      scale: 1.1,
-      duration: 0.15,
-      ease: "back.out(2)",
-    });
-
-    tl.to(textRef.current, {
-      opacity: 0,
-      y: -20,
-      duration: 0.3,
-      ease: "power2.out",
-    }, 0);
-
-    tl.to(lidRef.current, {
-      y: -300,
-      x: 100,
-      rotation: 120,
-      opacity: 0,
-      duration: 0.8,
-      ease: "power3.out",
-    }, 0.1);
-
-    tl.to(boxBodyRef.current, {
-      scale: 0.85,
-      transformOrigin: "center bottom",
-      duration: 0.3,
-      ease: "power2.inOut",
-    }, 0.1);
-
-    tl.fromTo(
-      ".petal-particle",
-      { x: 0, y: 0, scale: 0.1, opacity: 0 },
-      {
-        x: (i) => generatedPetals[i].x * 4,
-        y: (i) => generatedPetals[i].y * 4,
-        rotation: (i) => generatedPetals[i].rotation + 360,
-        scale: (i) => generatedPetals[i].scale,
-        opacity: 0.9,
-        duration: 1.2,
-        stagger: { each: 0.005, from: "random" },
-        ease: "power4.out",
-      },
-      0.15
-    );
-
-    // FIX #1: Wash sekarang menggunakan `position: fixed` via inline style
-    // dan TIDAK menggunakan inset-0 dari className yang konflik dengan
-    // manual left/top/width/height. transformOrigin dijamin "50% 50%"
-    // sehingga scale dari 0 → 1 selalu expand dari tengah layar.
-    tl.fromTo(
-      washRef.current,
-      { scale: 0, rotation: -45, opacity: 0 },
-      { scale: 1, rotation: 15, opacity: 1, duration: 1.3, ease: "power3.inOut" },
-      0.5
-    );
-
-    tl.to(
-      [boxBodyRef.current, ".petal-particle"],
-      { opacity: 0, duration: 0.4 },
-      1.1
-    );
+    setIsClicked(true);
   };
+
+  // Opening animation — dijalankan setelah `petals` ter-render sehingga semua
+  // elemen .petal-particle sudah ada di DOM ketika timeline (dan selector-nya)
+  // dibuat.
+  useGSAP(
+    () => {
+      if (!isClicked || petals.length === 0) return;
+
+      const tl = gsap.timeline({ onComplete: onOpenComplete });
+
+      tl.to(boxWrapperRef.current, {
+        y: 0,
+        scale: 1.1,
+        duration: 0.15,
+        ease: "back.out(2)",
+      });
+
+      tl.to(textRef.current, {
+        opacity: 0,
+        y: -20,
+        duration: 0.3,
+        ease: "power2.out",
+      }, 0);
+
+      tl.to(lidRef.current, {
+        y: -300,
+        x: 100,
+        rotation: 120,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power3.out",
+      }, 0.1);
+
+      tl.to(boxBodyRef.current, {
+        scale: 0.85,
+        transformOrigin: "center bottom",
+        duration: 0.3,
+        ease: "power2.inOut",
+      }, 0.1);
+
+      tl.fromTo(
+        ".petal-particle",
+        { x: 0, y: 0, scale: 0.1, opacity: 0 },
+        {
+          x: (i) => petals[i].x * 4,
+          y: (i) => petals[i].y * 4,
+          rotation: (i) => petals[i].rotation + 360,
+          scale: (i) => petals[i].scale,
+          opacity: 0.9,
+          duration: 1.2,
+          stagger: { each: 0.005, from: "random" },
+          ease: "power4.out",
+        },
+        0.15
+      );
+
+      // Wash overlay: position:fixed dengan left/top dihitung manual ke tengah
+      // viewport, transformOrigin "center" agar scale 0→1 mengembang dari pusat
+      // layar dan menutup penuh.
+      tl.fromTo(
+        washRef.current,
+        { scale: 0, rotation: -45, opacity: 0 },
+        { scale: 1, rotation: 15, opacity: 1, duration: 1.3, ease: "power3.inOut" },
+        0.5
+      );
+
+      tl.to(
+        [boxBodyRef.current, ".petal-particle"],
+        { opacity: 0, duration: 0.4 },
+        1.1
+      );
+    },
+    { scope: containerRef, dependencies: [isClicked, petals] }
+  );
 
   return (
     <div
@@ -231,18 +253,26 @@ export default function GiftBoxHero({ onOpenComplete }: GiftBoxHeroProps) {
       </div>
 
       {/*
-        FIX #1: Wash overlay sekarang menggunakan position:fixed dengan
-        left/top dihitung secara manual ke tengah viewport (50% - 160vmax).
-        Kelas `inset-0` DIHAPUS karena konflik dengan manual left/top/width/height.
-        transformOrigin diatur eksplisit ke "center" agar GSAP scale(0→1)
-        selalu mengembang dari pusat layar dan dijamin menutup penuh.
-        z-index lebih tinggi dari konten box agar selalu di depan.
+        Wash overlay memakai position:ABSOLUTE (bukan fixed) supaya benar-benar
+        di-clip oleh container `fixed inset-0 overflow-hidden`. Container adalah
+        ancestor ber-posisi sehingga menjadi containing block untuk anak absolute,
+        dan overflow-hidden menjamin elemen 320vmax ini tidak pernah menambah
+        area scroll dokumen.
+
+        FIX: sebelumnya position:fixed membuat elemen 320vmax ini lepas dari
+        clip container (backdrop-filter tidak menjamin containing block untuk
+        elemen fixed di semua browser). Saat animasi buka mencapai scale penuh
+        + rotasi 15°, elemen meluap ke dokumen dan memunculkan scrollbar ganda
+        sepersekian detik sampai komponen unmount. Absolute menutup celah ini.
+
+        left/top dihitung manual ke tengah (50% - 160vmax), transformOrigin
+        "center" agar scale 0→1 mengembang dari pusat dan menutup penuh.
       */}
       <div
         ref={washRef}
         className="pointer-events-none flex items-center justify-center opacity-0"
         style={{
-          position: "fixed",
+          position: "absolute",
           width: "320vmax",
           height: "320vmax",
           left: "calc(50% - 160vmax)",
