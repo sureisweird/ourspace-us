@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { Heart, Sparkle, Calendar } from "@phosphor-icons/react";
 
@@ -9,7 +10,7 @@ import PinGate from "@/components/PinGate";
 import GiftBoxHero from "@/components/GiftBoxHero";
 import MemoryLane from "@/components/MemoryLane";
 import SplitContent from "@/components/SplitContent";
-import RetroIpodFooter from "@/components/RetroIpodFooter";
+import RetroIpodFooter, { SONG_SRC } from "@/components/RetroIpodFooter";
 
 // FIX #6: Urutan akses:
 //   1. PinGate  → user memasukkan PIN
@@ -21,6 +22,7 @@ export default function Home() {
   const [stage, setStage] = useState<AppStage>("pin");
   const mainContentRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   useGSAP(
     () => {
@@ -29,7 +31,17 @@ export default function Home() {
       gsap.fromTo(
         mainContentRef.current,
         { opacity: 0, y: 40 },
-        { opacity: 1, y: 0, duration: 1.5, ease: "power3.out", delay: 0.1 }
+        {
+          opacity: 1,
+          y: 0,
+          duration: 1.5,
+          ease: "power3.out",
+          delay: 0.1,
+          // FIX: setelah konten utama selesai masuk, layout sudah final.
+          // Refresh ScrollTrigger agar posisi trigger kartu milestone dihitung
+          // ulang dan tidak ada kartu yang tertinggal di opacity:0.
+          onComplete: () => ScrollTrigger.refresh(),
+        }
       );
 
       gsap.fromTo(
@@ -43,6 +55,12 @@ export default function Home() {
 
   return (
     <div className="relative min-h-dvh overflow-x-hidden selection:bg-[#FFD1DC] selection:text-[#2A1F1D] bg-linear-to-tr from-[#FFF7F6] via-[#FFFDF9] to-[#FFF5F2]">
+      <audio
+        ref={audioRef}
+        src={SONG_SRC}
+        preload="metadata"
+        aria-hidden="true"
+      />
 
       {/* Stage 1: PIN Gate */}
       {stage === "pin" && (
@@ -51,7 +69,7 @@ export default function Home() {
 
       {/* Stage 2: Gift Box intro */}
       {stage === "gift" && (
-        <GiftBoxHero onOpenComplete={() => setStage("main")} />
+        <GiftBoxHero onOpenComplete={() => setStage("main")} audioRef={audioRef} />
       )}
 
       {/* Stage 3: Konten utama */}
@@ -131,8 +149,7 @@ export default function Home() {
 
             <MemoryLane />
             <SplitContent />
-            <RetroIpodFooter />
-
+            <RetroIpodFooter audioRef={audioRef} />
             <div className="py-12 border-t border-[#F2E5E3] text-center font-mono text-[10px] text-[#2A1F1D]/50 tracking-widest uppercase">
               <span>Made with love &copy; {new Date().getFullYear()}</span>
             </div>
