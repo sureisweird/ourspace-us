@@ -2,108 +2,86 @@
 
 import React, { useState, useRef } from "react";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { Heart, Sparkle, Calendar } from "@phosphor-icons/react";
 
+import PinGate from "@/components/PinGate";
 import GiftBoxHero from "@/components/GiftBoxHero";
 import MemoryLane from "@/components/MemoryLane";
 import SplitContent from "@/components/SplitContent";
-import RetroIpodFooter from "@/components/RetroIpodFooter";
+import RetroIpodFooter, { SONG_SRC } from "@/components/RetroIpodFooter";
+
+// FIX #6: Urutan akses:
+//   1. PinGate  → user memasukkan PIN
+//   2. GiftBoxHero → animasi buka kado
+//   3. Konten utama website
+type AppStage = "pin" | "gift" | "main";
 
 export default function Home() {
-  const [isGiftOpened, setIsGiftOpened] = useState(false);
+  const [stage, setStage] = useState<AppStage>("pin");
   const mainContentRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Fade-in animation for main content after GiftBox is opened
   useGSAP(
     () => {
-      if (isGiftOpened) {
-        // Fade in header and main content container
-        gsap.fromTo(
-          mainContentRef.current,
-          { opacity: 0, y: 40 },
-          { opacity: 1, y: 0, duration: 1.5, ease: "power3.out", delay: 0.1 }
-        );
+      if (stage !== "main") return;
 
-        gsap.fromTo(
-          headerRef.current,
-          { opacity: 0, y: -20 },
-          { opacity: 1, y: 0, duration: 1.2, ease: "power3.out", delay: 0.3 }
-        );
-      }
+      gsap.fromTo(
+        mainContentRef.current,
+        { opacity: 0, y: 40 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 1.5,
+          ease: "power3.out",
+          delay: 0.1,
+          // FIX: setelah konten utama selesai masuk, layout sudah final.
+          // Refresh ScrollTrigger agar posisi trigger kartu milestone dihitung
+          // ulang dan tidak ada kartu yang tertinggal di opacity:0.
+          onComplete: () => ScrollTrigger.refresh(),
+        }
+      );
+
+      gsap.fromTo(
+        headerRef.current,
+        { opacity: 0, y: -20 },
+        { opacity: 1, y: 0, duration: 1.2, ease: "power3.out", delay: 0.3 }
+      );
     },
-    { dependencies: [isGiftOpened] }
+    { dependencies: [stage] }
   );
 
   return (
     <div className="relative min-h-dvh overflow-x-hidden selection:bg-[#FFD1DC] selection:text-[#2A1F1D] bg-linear-to-tr from-[#FFF7F6] via-[#FFFDF9] to-[#FFF5F2]">
-      
-      {/* Gift Box Introduction Screen */}
-      {!isGiftOpened && (
-        <GiftBoxHero onOpenComplete={() => setIsGiftOpened(true)} />
+      <audio
+        ref={audioRef}
+        src={SONG_SRC}
+        preload="metadata"
+        aria-hidden="true"
+      />
+
+      {/* Stage 1: PIN Gate */}
+      {stage === "pin" && (
+        <PinGate onUnlocked={() => setStage("gift")} />
       )}
 
-      {/* Main Website Contents */}
-      {isGiftOpened && (
+      {/* Stage 2: Gift Box intro */}
+      {stage === "gift" && (
+        <GiftBoxHero onOpenComplete={() => setStage("main")} audioRef={audioRef} />
+      )}
+
+      {/* Stage 3: Konten utama */}
+      {stage === "main" && (
         <>
-          {/* Ambient Silhouetted Swaying/Floating Petals */}
+          {/* Ambient floating petals */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-            {/* Petal 1 */}
-            <div
-              className="absolute animate-leaf bg-[#FFA2B6]/10 rounded-full"
-              style={{
-                left: "10%",
-                width: "24px",
-                height: "18px",
-                animationDelay: "0s",
-                animationDuration: "16s",
-              }}
-            />
-            {/* Petal 2 */}
-            <div
-              className="absolute animate-leaf bg-[#FFC8DD]/15 rounded-full"
-              style={{
-                left: "40%",
-                width: "16px",
-                height: "12px",
-                animationDelay: "4s",
-                animationDuration: "20s",
-              }}
-            />
-            {/* Petal 3 */}
-            <div
-              className="absolute animate-leaf bg-[#FFE5D9]/20 rounded-full"
-              style={{
-                left: "70%",
-                width: "20px",
-                height: "22px",
-                animationDelay: "2s",
-                animationDuration: "14s",
-              }}
-            />
-            {/* Petal 4 */}
-            <div
-              className="absolute animate-leaf bg-[#FFA2B6]/12 rounded-full"
-              style={{
-                left: "85%",
-                width: "14px",
-                height: "16px",
-                animationDelay: "8s",
-                animationDuration: "18s",
-              }}
-            />
-            {/* Petal 5 */}
-            <div
-              className="absolute animate-leaf bg-[#FFCAD4]/10 rounded-full"
-              style={{
-                left: "25%",
-                width: "22px",
-                height: "20px",
-                animationDelay: "10s",
-                animationDuration: "22s",
-              }}
-            />
+            <div className="absolute animate-leaf bg-[#FFA2B6]/10 rounded-full" style={{ left: "10%", width: "24px", height: "18px", animationDelay: "0s", animationDuration: "16s" }} />
+            <div className="absolute animate-leaf bg-[#FFC8DD]/15 rounded-full" style={{ left: "40%", width: "16px", height: "12px", animationDelay: "4s", animationDuration: "20s" }} />
+            <div className="absolute animate-leaf bg-[#FFE5D9]/20 rounded-full" style={{ left: "70%", width: "20px", height: "22px", animationDelay: "2s", animationDuration: "14s" }} />
+            <div className="absolute animate-leaf bg-[#FFA2B6]/12 rounded-full" style={{ left: "85%", width: "14px", height: "16px", animationDelay: "8s", animationDuration: "18s" }} />
+            <div className="absolute animate-leaf bg-[#FFCAD4]/10 rounded-full" style={{ left: "25%", width: "22px", height: "20px", animationDelay: "10s", animationDuration: "22s" }} />
           </div>
 
           {/* Navigation Header */}
@@ -136,19 +114,19 @@ export default function Home() {
             </div>
           </header>
 
-          {/* Main Content Sections */}
+          {/* Main Content */}
           <main ref={mainContentRef} className="relative z-10">
-            {/* Interactive Hero Intro section */}
+            {/* Hero Intro */}
             <section className="pt-16 pb-24 px-6 max-w-5xl mx-auto text-center relative">
               <div className="absolute -top-12 left-1/2 -translate-x-1/2 text-[#FFB7B2]/40 animate-pulse">
                 <Sparkle size={32} weight="fill" />
               </div>
-              
+
               <h1 className="text-5xl md:text-7xl font-sans tracking-tight leading-[1.1] font-light text-[#2A1F1D] mb-8 max-w-4xl mx-auto">
                 Celebrating our beautiful <br />
                 <span className="font-cursive text-6xl md:text-8xl text-[#E5989B]">odyssey of love</span>.
               </h1>
-              
+
               <p className="text-[#2A1F1D]/75 text-base md:text-lg leading-relaxed max-w-[60ch] mx-auto font-light mb-12">
                 A digital garden containing the milestones, memories, and songs that have woven our hearts together. Welcome to our space.
               </p>
@@ -169,16 +147,9 @@ export default function Home() {
               </div>
             </section>
 
-            {/* Polaroid Memory Cluster */}
             <MemoryLane />
-
-            {/* Split Column Details Bouquet & Milestones */}
             <SplitContent />
-
-            {/* Footer with retro iPod & final letter */}
-            <RetroIpodFooter />
-
-            {/* Page Sub-footer */}
+            <RetroIpodFooter audioRef={audioRef} />
             <div className="py-12 border-t border-[#F2E5E3] text-center font-mono text-[10px] text-[#2A1F1D]/50 tracking-widest uppercase">
               <span>Made with love &copy; {new Date().getFullYear()}</span>
             </div>

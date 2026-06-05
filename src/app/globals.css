@@ -13,11 +13,22 @@
   --font-cursive: var(--font-dancing-script);
 }
 
+/* FIX #9: Smooth scroll untuk semua anchor link (#memories, #milestones, #letter) */
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+html::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
-  overflow-x: hidden;
 }
 
 @keyframes float-leaf {
@@ -56,3 +67,20 @@ body {
   animation: pulse-slow 12s ease-in-out infinite;
 }
 
+/* FIX: animasi untuk pesan error PinGate. Sebelumnya class `animate-fade-in`
+   dipakai tapi keyframe-nya tidak pernah didefinisikan (bukan utilitas bawaan
+   Tailwind v4), sehingga efek fade tidak muncul. */
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}

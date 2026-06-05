@@ -7,7 +7,11 @@ import { Heart } from "@phosphor-icons/react";
 
 interface PolaroidItem {
   id: number;
-  url: string;
+  // FIX #5: Gunakan path lokal /images/ sebagai sumber utama.
+  // Letakkan foto di: /public/images/memory-1.jpg, memory-2.jpg, dst.
+  // onError fallback ke Unsplash kalau file belum ada.
+  localUrl: string;
+  fallbackUrl: string;
   caption: string;
   date: string;
   colSpanClass: string;
@@ -17,7 +21,8 @@ interface PolaroidItem {
 const MEMORIES: PolaroidItem[] = [
   {
     id: 1,
-    url: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&q=80&w=600",
+    localUrl: "/images/memory-1.jpg",
+    fallbackUrl: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&q=80&w=600",
     caption: "Where our fingers met, holding on forever",
     date: "June 14, 2023",
     colSpanClass: "md:col-span-4",
@@ -25,7 +30,8 @@ const MEMORIES: PolaroidItem[] = [
   },
   {
     id: 2,
-    url: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&q=80&w=600",
+    localUrl: "/images/memory-2.jpg",
+    fallbackUrl: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&q=80&w=600",
     caption: "A quiet sunset toast under gold skies",
     date: "August 29, 2023",
     colSpanClass: "md:col-span-4",
@@ -33,7 +39,8 @@ const MEMORIES: PolaroidItem[] = [
   },
   {
     id: 3,
-    url: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&q=80&w=600",
+    localUrl: "/images/memory-3.jpg",
+    fallbackUrl: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&q=80&w=600",
     caption: "Walking through a golden, silent forest",
     date: "October 12, 2024",
     colSpanClass: "md:col-span-4",
@@ -41,7 +48,8 @@ const MEMORIES: PolaroidItem[] = [
   },
   {
     id: 4,
-    url: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&q=80&w=600",
+    localUrl: "/images/memory-4.jpg",
+    fallbackUrl: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&q=80&w=600",
     caption: "A simple heart drawn in the seaside sand",
     date: "January 03, 2025",
     colSpanClass: "md:col-span-6",
@@ -49,7 +57,8 @@ const MEMORIES: PolaroidItem[] = [
   },
   {
     id: 5,
-    url: "https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&q=80&w=600",
+    localUrl: "/images/memory-5.jpg",
+    fallbackUrl: "https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&q=80&w=600",
     caption: "Soft lighting, flowers, and your sweet laughter",
     date: "March 18, 2025",
     colSpanClass: "md:col-span-6",
@@ -68,10 +77,15 @@ export default function MemoryLane() {
         const initialRotation = gsap.utils.random(-5, 5);
         gsap.set(card, { rotation: initialRotation, transformOrigin: "center center" });
 
-        gsap.to(card, {
+        // FIX: simpan referensi tween float. Sebelumnya tween hover memakai
+        // overwrite:"auto" yang mematikan tween float secara permanen (keduanya
+        // sama-sama menganimasikan `rotation`), sehingga animasi mengambang
+        // hilang setelah kartu pertama kali di-hover. Sekarang float hanya
+        // menganimasikan x/y (tidak ada properti yang bentrok dengan hover),
+        // lalu di-pause saat hover dan di-resume setelah pointer keluar.
+        const floatTween = gsap.to(card, {
           y: () => `+=${gsap.utils.random(-8, 8)}`,
           x: () => `+=${gsap.utils.random(-4, 4)}`,
-          rotation: () => initialRotation + gsap.utils.random(-2, 2),
           duration: gsap.utils.random(4, 6),
           repeat: -1,
           yoyo: true,
@@ -79,6 +93,7 @@ export default function MemoryLane() {
         });
 
         card.addEventListener("mouseenter", () => {
+          floatTween.pause();
           gsap.to(card, {
             scale: 1.05,
             rotation: gsap.utils.random(-1, 1),
@@ -86,7 +101,6 @@ export default function MemoryLane() {
             boxShadow: "0 25px 50px -12px rgba(42,31,29,0.15)",
             duration: 0.4,
             ease: "power2.out",
-            overwrite: "auto",
           });
         });
 
@@ -98,7 +112,7 @@ export default function MemoryLane() {
             boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.02)",
             duration: 0.5,
             ease: "power2.out",
-            overwrite: "auto",
+            onComplete: () => floatTween.resume(),
           });
         });
       });
@@ -137,18 +151,22 @@ export default function MemoryLane() {
             className={`polaroid-card bg-white p-4 pb-6 rounded-sm shadow-md border border-[#F2E5E3]/40 flex flex-col justify-between h-fit cursor-pointer transition-shadow ${memory.colSpanClass} ${memory.offsetClass}`}
             style={{ perspective: 1000 }}
           >
-            {/* Image container */}
             <div className="relative aspect-4/3 w-full overflow-hidden bg-[#FFFBF9] rounded-sm mb-4 border border-[#F2E5E3]/20">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={memory.url}
+                src={memory.localUrl}
                 alt={memory.caption}
                 loading="lazy"
                 className="w-full h-full object-cover transition-all duration-500 filter-[grayscale(15%)] hover:filter-[grayscale(0%)]"
+                onError={(e) => {
+                  const img = e.currentTarget;
+                  if (img.src !== memory.fallbackUrl) {
+                    img.src = memory.fallbackUrl;
+                  }
+                }}
               />
             </div>
 
-            {/* Caption details */}
             <div className="px-1 flex flex-col gap-2">
               <p className="font-cursive text-2xl text-[#2A1F1D]/90 leading-tight">
                 {memory.caption}
