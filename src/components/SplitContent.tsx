@@ -65,6 +65,11 @@ export default function SplitContent() {
               start: "top 85%",
               end: "top 55%",
               toggleActions: "play none none none",
+              // FIX: recalculate posisi start/end saat ScrollTrigger.refresh()
+              // dipanggil (mis. setelah animasi masuk konten utama selesai),
+              // supaya kartu tidak tertinggal di opacity:0 karena posisi
+              // trigger dihitung saat layout masih bergeser.
+              invalidateOnRefresh: true,
             },
           }
         );
