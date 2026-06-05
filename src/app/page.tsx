@@ -1,178 +1,190 @@
 "use client";
 
-import { motion } from "motion/react";
-import { ArrowRight, Compass, Planet, Users, ShieldCheck } from "@phosphor-icons/react";
+import React, { useState, useRef } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+import { Heart, Sparkle, Calendar } from "@phosphor-icons/react";
+
+import GiftBoxHero from "@/components/GiftBoxHero";
+import MemoryLane from "@/components/MemoryLane";
+import SplitContent from "@/components/SplitContent";
+import RetroIpodFooter from "@/components/RetroIpodFooter";
 
 export default function Home() {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.1,
-      },
-    },
-  } as const;
+  const [isGiftOpened, setIsGiftOpened] = useState(false);
+  const mainContentRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 18,
-      },
+  // Fade-in animation for main content after GiftBox is opened
+  useGSAP(
+    () => {
+      if (isGiftOpened) {
+        // Fade in header and main content container
+        gsap.fromTo(
+          mainContentRef.current,
+          { opacity: 0, y: 40 },
+          { opacity: 1, y: 0, duration: 1.5, ease: "power3.out", delay: 0.1 }
+        );
+
+        gsap.fromTo(
+          headerRef.current,
+          { opacity: 0, y: -20 },
+          { opacity: 1, y: 0, duration: 1.2, ease: "power3.out", delay: 0.3 }
+        );
+      }
     },
-  } as const;
+    { dependencies: [isGiftOpened] }
+  );
 
   return (
-    <div className="min-h-dvh bg-black text-zinc-100 flex flex-col selection:bg-zinc-800 selection:text-white overflow-hidden relative">
-      {/* Background Gradients */}
-      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-zinc-900/20 blur-[150px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-zinc-900/10 blur-[120px] pointer-events-none" />
+    <div className="relative min-h-dvh overflow-x-hidden selection:bg-[#FFD1DC] selection:text-[#2A1F1D] bg-linear-to-tr from-[#FFF7F6] via-[#FFFDF9] to-[#FFF5F2]">
+      
+      {/* Gift Box Introduction Screen */}
+      {!isGiftOpened && (
+        <GiftBoxHero onOpenComplete={() => setIsGiftOpened(true)} />
+      )}
 
-      {/* Navigation Header */}
-      <header className="h-20 w-full border-b border-zinc-900 px-6 md:px-12 flex items-center justify-between z-10 backdrop-blur-md bg-black/40 sticky top-0">
-        <div className="flex items-center gap-2">
-          <Planet size={24} weight="duotone" className="text-zinc-400" />
-          <span className="font-mono text-xs tracking-[0.25em] font-semibold uppercase text-zinc-200">
-            ourspace
-          </span>
-        </div>
-        
-        <nav className="hidden md:flex items-center gap-8 text-xs font-mono text-zinc-400">
-          <a href="#about" className="hover:text-white transition-colors">manifesto</a>
-          <a href="#features" className="hover:text-white transition-colors">features</a>
-          <a href="#docs" className="hover:text-white transition-colors">docs</a>
-        </nav>
+      {/* Main Website Contents */}
+      {isGiftOpened && (
+        <>
+          {/* Ambient Silhouetted Swaying/Floating Petals */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+            {/* Petal 1 */}
+            <div
+              className="absolute animate-leaf bg-[#FFA2B6]/10 rounded-full"
+              style={{
+                left: "10%",
+                width: "24px",
+                height: "18px",
+                animationDelay: "0s",
+                animationDuration: "16s",
+              }}
+            />
+            {/* Petal 2 */}
+            <div
+              className="absolute animate-leaf bg-[#FFC8DD]/15 rounded-full"
+              style={{
+                left: "40%",
+                width: "16px",
+                height: "12px",
+                animationDelay: "4s",
+                animationDuration: "20s",
+              }}
+            />
+            {/* Petal 3 */}
+            <div
+              className="absolute animate-leaf bg-[#FFE5D9]/20 rounded-full"
+              style={{
+                left: "70%",
+                width: "20px",
+                height: "22px",
+                animationDelay: "2s",
+                animationDuration: "14s",
+              }}
+            />
+            {/* Petal 4 */}
+            <div
+              className="absolute animate-leaf bg-[#FFA2B6]/12 rounded-full"
+              style={{
+                left: "85%",
+                width: "14px",
+                height: "16px",
+                animationDelay: "8s",
+                animationDuration: "18s",
+              }}
+            />
+            {/* Petal 5 */}
+            <div
+              className="absolute animate-leaf bg-[#FFCAD4]/10 rounded-full"
+              style={{
+                left: "25%",
+                width: "22px",
+                height: "20px",
+                animationDelay: "10s",
+                animationDuration: "22s",
+              }}
+            />
+          </div>
 
-        <div>
-          <button className="text-xs font-mono border border-zinc-800 hover:border-zinc-500 hover:bg-zinc-900 text-zinc-300 px-4 py-2 rounded-full transition-all duration-300">
-            connect
-          </button>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <main className="flex-1 flex flex-col justify-center items-center px-6 md:px-12 py-16 z-10">
-        <motion.div 
-          className="max-w-4xl w-full flex flex-col items-center text-center"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {/* Eyebrow */}
-          <motion.div 
-            variants={itemVariants}
-            className="flex items-center gap-2 mb-6"
+          {/* Navigation Header */}
+          <header
+            ref={headerRef}
+            className="h-24 w-full px-6 md:px-12 flex items-center justify-between z-40 relative max-w-7xl mx-auto"
           >
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-zinc-400 animate-pulse" />
-            <span className="font-mono text-[10px] tracking-[0.3em] uppercase text-zinc-500">
-              Introducing OurSpace
-            </span>
-          </motion.div>
-
-          {/* Headline */}
-          <motion.h1 
-            variants={itemVariants}
-            className="text-4xl md:text-7xl font-sans tracking-tighter leading-[1.05] text-white font-medium mb-6 max-w-3xl"
-          >
-            A shared space for <br />
-            <span className="italic text-zinc-400 font-normal">collective minds</span>.
-          </motion.h1>
-
-          {/* Subtext */}
-          <motion.p 
-            variants={itemVariants}
-            className="text-zinc-400 text-sm md:text-base leading-relaxed max-w-[60ch] mb-10"
-          >
-            A decentralized, secure digital sanctuary designed for creative groups to build, share, and collaborate together without friction.
-          </motion.p>
-
-          {/* CTAs */}
-          <motion.div 
-            variants={itemVariants}
-            className="flex flex-col sm:flex-row gap-4 items-center mb-24 justify-center"
-          >
-            <button className="group relative flex h-11 items-center justify-center gap-2 rounded-full bg-white px-6 text-xs font-mono font-medium text-black transition-all duration-300 hover:bg-zinc-200 active:scale-[0.98]">
-              Enter Space
-              <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
-            </button>
-            <button className="flex h-11 items-center justify-center border border-zinc-800 hover:border-zinc-700 bg-zinc-950 px-6 text-xs font-mono font-medium text-zinc-400 hover:text-white rounded-full transition-all duration-300 active:scale-[0.98]">
-              Read Manifesto
-            </button>
-          </motion.div>
-        </motion.div>
-
-        {/* Feature Highlights Grid */}
-        <motion.section 
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.15 }}
-          className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-3 gap-6 pt-16 border-t border-zinc-900"
-        >
-          {/* Card 1 */}
-          <motion.div 
-            variants={itemVariants}
-            className="border border-zinc-900 bg-zinc-950/40 backdrop-blur-sm p-8 rounded-2xl flex flex-col justify-between group hover:border-zinc-800 transition-all duration-300"
-          >
-            <div className="mb-8">
-              <div className="w-10 h-10 rounded-lg bg-zinc-900 flex items-center justify-center mb-4 text-zinc-400 group-hover:text-white transition-colors duration-300">
-                <Compass size={20} weight="duotone" />
-              </div>
-              <h3 className="text-sm font-sans font-medium text-zinc-200 mb-2">Decentralized Hub</h3>
-              <p className="text-zinc-500 text-xs leading-relaxed">
-                Connect and sync peer-to-peer without relying on heavy centralized server silos.
-              </p>
+            <div className="flex items-center gap-2">
+              <Heart size={20} weight="fill" className="text-[#E5989B]" />
+              <span className="font-sans font-light text-sm tracking-[0.2em] uppercase text-[#2A1F1D]">
+                OUR SPACE
+              </span>
             </div>
-            <span className="text-[10px] font-mono text-zinc-600">01 / DECENTRALIZED</span>
-          </motion.div>
 
-          {/* Card 2 */}
-          <motion.div 
-            variants={itemVariants}
-            className="border border-zinc-900 bg-zinc-950/40 backdrop-blur-sm p-8 rounded-2xl flex flex-col justify-between group hover:border-zinc-800 transition-all duration-300"
-          >
-            <div className="mb-8">
-              <div className="w-10 h-10 rounded-lg bg-zinc-900 flex items-center justify-center mb-4 text-zinc-400 group-hover:text-white transition-colors duration-300">
-                <Users size={20} weight="duotone" />
-              </div>
-              <h3 className="text-sm font-sans font-medium text-zinc-200 mb-2">Group Spaces</h3>
-              <p className="text-zinc-500 text-xs leading-relaxed">
-                Create dedicated collaborative environments for your team, friends, or community.
-              </p>
+            <nav className="hidden md:flex items-center gap-10 text-xs font-mono text-[#2A1F1D]/70 tracking-wider">
+              <a href="#memories" className="hover:text-[#E5989B] transition-colors">
+                01 / MEMORIES
+              </a>
+              <a href="#milestones" className="hover:text-[#E5989B] transition-colors">
+                02 / MILESTONES
+              </a>
+              <a href="#letter" className="hover:text-[#E5989B] transition-colors">
+                03 / LETTER
+              </a>
+            </nav>
+
+            <div className="flex items-center gap-2 border border-[#F2E5E3] bg-[#FFFBF9]/80 px-4 py-2 rounded-full shadow-sm text-xs font-mono text-[#2A1F1D]/80">
+              <Calendar size={14} className="text-[#E5989B]" />
+              <span>Est. June 14</span>
             </div>
-            <span className="text-[10px] font-mono text-zinc-600">02 / COLLABORATIVE</span>
-          </motion.div>
+          </header>
 
-          {/* Card 3 */}
-          <motion.div 
-            variants={itemVariants}
-            className="border border-zinc-900 bg-zinc-950/40 backdrop-blur-sm p-8 rounded-2xl flex flex-col justify-between group hover:border-zinc-800 transition-all duration-300"
-          >
-            <div className="mb-8">
-              <div className="w-10 h-10 rounded-lg bg-zinc-900 flex items-center justify-center mb-4 text-zinc-400 group-hover:text-white transition-colors duration-300">
-                <ShieldCheck size={20} weight="duotone" />
+          {/* Main Content Sections */}
+          <main ref={mainContentRef} className="relative z-10">
+            {/* Interactive Hero Intro section */}
+            <section className="pt-16 pb-24 px-6 max-w-5xl mx-auto text-center relative">
+              <div className="absolute -top-12 left-1/2 -translate-x-1/2 text-[#FFB7B2]/40 animate-pulse">
+                <Sparkle size={32} weight="fill" />
               </div>
-              <h3 className="text-sm font-sans font-medium text-zinc-200 mb-2">Zero-Knowledge Security</h3>
-              <p className="text-zinc-500 text-xs leading-relaxed">
-                Your content is fully encrypted end-to-end, keeping your private data genuinely private.
+              
+              <h1 className="text-5xl md:text-7xl font-sans tracking-tight leading-[1.1] font-light text-[#2A1F1D] mb-8 max-w-4xl mx-auto">
+                Celebrating our beautiful <br />
+                <span className="font-cursive text-6xl md:text-8xl text-[#E5989B]">odyssey of love</span>.
+              </h1>
+              
+              <p className="text-[#2A1F1D]/75 text-base md:text-lg leading-relaxed max-w-[60ch] mx-auto font-light mb-12">
+                A digital garden containing the milestones, memories, and songs that have woven our hearts together. Welcome to our space.
               </p>
-            </div>
-            <span className="text-[10px] font-mono text-zinc-600">03 / END-TO-END</span>
-          </motion.div>
-        </motion.section>
-      </main>
 
-      {/* Footer */}
-      <footer className="h-16 w-full border-t border-zinc-900 px-6 md:px-12 flex items-center justify-between text-xs font-mono text-zinc-600 z-10">
-        <span>&copy; {new Date().getFullYear()} OurSpace Inc.</span>
-        <span>built with intent.</span>
-      </footer>
+              <div className="flex justify-center gap-6">
+                <a
+                  href="#memories"
+                  className="px-6 py-3 rounded-full bg-[#E5989B] hover:bg-[#B56576] text-white font-mono text-xs font-medium tracking-wider shadow-md active:scale-95 transition-all duration-300"
+                >
+                  EXPLORE ARCHIVES
+                </a>
+                <a
+                  href="#letter"
+                  className="px-6 py-3 rounded-full border border-[#E5989B]/30 hover:border-[#E5989B] bg-[#FFFBF9]/80 text-[#2A1F1D]/80 hover:text-[#2A1F1D] font-mono text-xs font-medium tracking-wider shadow-sm active:scale-95 transition-all duration-300"
+                >
+                  READ LETTER
+                </a>
+              </div>
+            </section>
+
+            {/* Polaroid Memory Cluster */}
+            <MemoryLane />
+
+            {/* Split Column Details Bouquet & Milestones */}
+            <SplitContent />
+
+            {/* Footer with retro iPod & final letter */}
+            <RetroIpodFooter />
+
+            {/* Page Sub-footer */}
+            <div className="py-12 border-t border-[#F2E5E3] text-center font-mono text-[10px] text-[#2A1F1D]/50 tracking-widest uppercase">
+              <span>Made with love &copy; {new Date().getFullYear()}</span>
+            </div>
+          </main>
+        </>
+      )}
     </div>
   );
 }

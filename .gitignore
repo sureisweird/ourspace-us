@@ -42,3 +42,9 @@ next-env.d.ts
 
 # agent skill
 .agents/
+agent.md
+claude.md
+
+# scripts
+*.bat
+scripts/
