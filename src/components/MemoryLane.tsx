@@ -77,10 +77,15 @@ export default function MemoryLane() {
         const initialRotation = gsap.utils.random(-5, 5);
         gsap.set(card, { rotation: initialRotation, transformOrigin: "center center" });
 
-        gsap.to(card, {
+        // FIX: simpan referensi tween float. Sebelumnya tween hover memakai
+        // overwrite:"auto" yang mematikan tween float secara permanen (keduanya
+        // sama-sama menganimasikan `rotation`), sehingga animasi mengambang
+        // hilang setelah kartu pertama kali di-hover. Sekarang float hanya
+        // menganimasikan x/y (tidak ada properti yang bentrok dengan hover),
+        // lalu di-pause saat hover dan di-resume setelah pointer keluar.
+        const floatTween = gsap.to(card, {
           y: () => `+=${gsap.utils.random(-8, 8)}`,
           x: () => `+=${gsap.utils.random(-4, 4)}`,
-          rotation: () => initialRotation + gsap.utils.random(-2, 2),
           duration: gsap.utils.random(4, 6),
           repeat: -1,
           yoyo: true,
@@ -88,6 +93,7 @@ export default function MemoryLane() {
         });
 
         card.addEventListener("mouseenter", () => {
+          floatTween.pause();
           gsap.to(card, {
             scale: 1.05,
             rotation: gsap.utils.random(-1, 1),
@@ -95,7 +101,6 @@ export default function MemoryLane() {
             boxShadow: "0 25px 50px -12px rgba(42,31,29,0.15)",
             duration: 0.4,
             ease: "power2.out",
-            overwrite: "auto",
           });
         });
 
@@ -107,7 +112,7 @@ export default function MemoryLane() {
             boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.02)",
             duration: 0.5,
             ease: "power2.out",
-            overwrite: "auto",
+            onComplete: () => floatTween.resume(),
           });
         });
       });
