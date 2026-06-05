@@ -65,11 +65,9 @@ export default function MemoryLane() {
       const cards = gsap.utils.toArray<HTMLElement>(".polaroid-card");
 
       cards.forEach((card) => {
-        // Set an initial organic tilt
         const initialRotation = gsap.utils.random(-5, 5);
         gsap.set(card, { rotation: initialRotation, transformOrigin: "center center" });
 
-        // Add subtle floating effect
         gsap.to(card, {
           y: () => `+=${gsap.utils.random(-8, 8)}`,
           x: () => `+=${gsap.utils.random(-4, 4)}`,
@@ -80,7 +78,6 @@ export default function MemoryLane() {
           ease: "sine.inOut",
         });
 
-        // Hover animation
         card.addEventListener("mouseenter", () => {
           gsap.to(card, {
             scale: 1.05,
@@ -146,11 +143,12 @@ export default function MemoryLane() {
               <img
                 src={memory.url}
                 alt={memory.caption}
-                className="w-full h-full object-cover grayscale-15 hover:grayscale-0 transition-all duration-500"
+                loading="lazy"
+                className="w-full h-full object-cover transition-all duration-500 filter-[grayscale(15%)] hover:filter-[grayscale(0%)]"
               />
             </div>
-            
-            {/* Captain details */}
+
+            {/* Caption details */}
             <div className="px-1 flex flex-col gap-2">
               <p className="font-cursive text-2xl text-[#2A1F1D]/90 leading-tight">
                 {memory.caption}
