@@ -18,9 +18,9 @@ interface PolaroidItem {
 // Bayangan berlapis (Token_Desain) sebagai literal agar dapat diinterpolasi GSAP.
 // Mengacu pada --shadow-elevation-* di globals.css.
 const SHADOW_REST =
-  "0 4px 12px rgba(42, 31, 29, 0.08), 0 12px 32px rgba(42, 31, 29, 0.10)"; // elevation-2
+  "0 4px 20px rgba(42, 31, 29, 0.06), 0 12px 40px rgba(42, 31, 29, 0.08)"; // elevation-2
 const SHADOW_HOVER =
-  "0 8px 24px rgba(42, 31, 29, 0.10), 0 24px 60px rgba(42, 31, 29, 0.14)"; // elevation-3
+  "0 12px 32px rgba(42, 31, 29, 0.08), 0 32px 80px rgba(42, 31, 29, 0.12)"; // elevation-3
 
 const MEMORIES: PolaroidItem[] = [
   {
@@ -30,7 +30,7 @@ const MEMORIES: PolaroidItem[] = [
     caption: "Where our fingers met, holding on forever",
     date: "June 14, 2023",
     colSpanClass: "md:col-span-4",
-    offsetClass: "md:translate-y-4",
+    offsetClass: "",
   },
   {
     id: 2,
@@ -39,7 +39,7 @@ const MEMORIES: PolaroidItem[] = [
     caption: "A quiet sunset toast under gold skies",
     date: "August 29, 2023",
     colSpanClass: "md:col-span-4",
-    offsetClass: "md:-translate-y-8",
+    offsetClass: "",
   },
   {
     id: 3,
@@ -48,7 +48,7 @@ const MEMORIES: PolaroidItem[] = [
     caption: "Walking through a golden, silent forest",
     date: "October 12, 2024",
     colSpanClass: "md:col-span-4",
-    offsetClass: "md:translate-y-12",
+    offsetClass: "",
   },
   {
     id: 4,
@@ -56,8 +56,8 @@ const MEMORIES: PolaroidItem[] = [
     fallbackUrl: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&q=80&w=600",
     caption: "A simple heart drawn in the seaside sand",
     date: "January 03, 2025",
-    colSpanClass: "md:col-span-6",
-    offsetClass: "md:-translate-y-2",
+    colSpanClass: "md:col-span-4 md:col-start-3",
+    offsetClass: "",
   },
   {
     id: 5,
@@ -65,8 +65,8 @@ const MEMORIES: PolaroidItem[] = [
     fallbackUrl: "https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&q=80&w=600",
     caption: "Soft lighting, flowers, and your sweet laughter",
     date: "March 18, 2025",
-    colSpanClass: "md:col-span-6",
-    offsetClass: "md:translate-y-6",
+    colSpanClass: "md:col-span-4",
+    offsetClass: "",
   },
 ];
 
@@ -154,7 +154,7 @@ export default function MemoryLane() {
     <section
       ref={containerRef}
       id="memories"
-      className="py-32 px-6 max-w-7xl mx-auto relative z-10 overflow-hidden"
+      className="py-32 px-6 max-w-7xl mx-auto relative z-10"
     >
       {/* Section Header */}
       <div className="max-w-xl mb-24">
@@ -174,7 +174,10 @@ export default function MemoryLane() {
       </div>
 
       {/* Polaroid Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 pt-8">
+      <div 
+        className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 pt-8"
+        style={{ perspective: 1000 }}
+      >
         {MEMORIES.map((memory) => (
           <div
             key={memory.id}
@@ -189,7 +192,7 @@ export default function MemoryLane() {
               }
             }}
             className={`polaroid-card focus-ring bg-surface p-4 pb-6 rounded-card shadow-elevation-2 border border-accent/20 flex flex-col justify-between h-fit cursor-pointer transition-spring duration-500 ${memory.colSpanClass} ${memory.offsetClass}`}
-            style={{ perspective: 1000 }}
+            style={{ transformStyle: "preserve-3d" }}
           >
             <div className="relative aspect-4/3 w-full overflow-hidden bg-background rounded-inner mb-4 border border-accent/15">
               {/* eslint-disable-next-line @next/next/no-img-element */}
