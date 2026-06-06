@@ -25,15 +25,15 @@ const getStickers = (id?: number): StickerItem[] => {
     return [
       {
         src: "/assets/hibiscus_flower/leaf_2.svg",
-        className: "absolute -top-4 -right-4 w-12 h-auto rotate-45 opacity-90 z-20 pointer-events-none animate-sway",
+        className: "absolute -top-6 -right-6 w-20 h-auto rotate-45 z-20 pointer-events-none animate-sway",
       },
       {
         src: "/assets/hibiscus_flower/flower_medium_3.svg",
-        className: "absolute -top-6 right-2 w-8 h-auto -rotate-12 opacity-95 z-20 pointer-events-none animate-pulse-slow [animation-delay:0.5s]",
+        className: "absolute -top-10 right-4 w-14 h-auto -rotate-12 z-20 pointer-events-none animate-pulse-solid [animation-delay:0.5s]",
       },
       {
         src: "/assets/hibiscus_flower/petal_2.svg",
-        className: "absolute bottom-2 right-2 w-5 h-auto rotate-45 opacity-75 z-20 pointer-events-none animate-sway",
+        className: "absolute bottom-3 right-3 w-9 h-auto rotate-45 z-20 pointer-events-none animate-sway",
       }
     ];
   }
@@ -41,15 +41,15 @@ const getStickers = (id?: number): StickerItem[] => {
     return [
       {
         src: "/assets/hibiscus_flower/leaf_3.svg",
-        className: "absolute -bottom-2 -left-6 w-9 h-auto rotate-45 opacity-80 z-10 pointer-events-none animate-sway",
+        className: "absolute -bottom-4 -left-10 w-16 h-auto rotate-45 z-10 pointer-events-none animate-sway",
       },
       {
         src: "/assets/hibiscus_flower/flower_medium_3.svg",
-        className: "absolute -bottom-5 -left-4 w-12 h-auto -rotate-12 opacity-95 z-20 pointer-events-none animate-pulse-slow",
+        className: "absolute -bottom-8 -left-6 w-20 h-auto -rotate-12 z-20 pointer-events-none animate-pulse-solid",
       },
       {
         src: "/assets/hibiscus_flower/petal_5.svg",
-        className: "absolute bottom-6 left-2 w-5 h-auto -rotate-12 opacity-75 z-20 pointer-events-none animate-pulse-slow",
+        className: "absolute bottom-6 left-2 w-9 h-auto -rotate-12 z-20 pointer-events-none animate-pulse-solid",
       }
     ];
   }
@@ -57,15 +57,15 @@ const getStickers = (id?: number): StickerItem[] => {
     return [
       {
         src: "/assets/hibiscus_flower/petal_3.svg",
-        className: "absolute -top-3 -left-3 w-10 h-auto rotate-12 opacity-85 z-20 pointer-events-none animate-sway [animation-delay:0.5s]",
+        className: "absolute -top-5 -left-5 w-16 h-auto rotate-12 z-20 pointer-events-none animate-sway [animation-delay:0.5s]",
       },
       {
         src: "/assets/hibiscus_flower/petal_1.svg",
-        className: "absolute -top-5 left-3 w-7 h-auto -rotate-45 opacity-90 z-20 pointer-events-none animate-sway [animation-delay:1.2s]",
+        className: "absolute -top-8 left-5 w-12 h-auto -rotate-45 z-20 pointer-events-none animate-sway [animation-delay:1.2s]",
       },
       {
         src: "/assets/hibiscus_flower/petal_4.svg",
-        className: "absolute bottom-3 right-4 w-4 h-auto rotate-45 opacity-75 z-20 pointer-events-none animate-sway",
+        className: "absolute bottom-3 right-4 w-8 h-auto rotate-45 z-20 pointer-events-none animate-sway",
       }
     ];
   }
@@ -73,30 +73,30 @@ const getStickers = (id?: number): StickerItem[] => {
     return [
       {
         src: "/assets/hibiscus_flower/leaf_3.svg",
-        className: "absolute -bottom-3 -right-3 w-11 h-auto -rotate-45 opacity-90 z-20 pointer-events-none animate-sway [animation-delay:1s]",
+        className: "absolute -bottom-5 -right-5 w-18 h-auto -rotate-45 z-20 pointer-events-none animate-sway [animation-delay:1s]",
       },
       {
         src: "/assets/hibiscus_flower/flower_medium_1.svg",
-        className: "absolute -bottom-6 right-3 w-9 h-auto rotate-12 opacity-95 z-20 pointer-events-none animate-pulse-slow",
+        className: "absolute -bottom-10 right-5 w-16 h-auto rotate-12 z-20 pointer-events-none animate-pulse-solid",
       },
       {
         src: "/assets/hibiscus_flower/petal_5.svg",
-        className: "absolute bottom-6 left-2 w-5 h-auto -rotate-12 opacity-75 z-20 pointer-events-none animate-pulse-slow",
+        className: "absolute bottom-6 left-2 w-9 h-auto -rotate-12 z-20 pointer-events-none animate-pulse-solid",
       }
     ];
   }
   return [
     {
       src: "/assets/hibiscus_flower/leaf_1.svg",
-      className: "absolute -top-6 right-2 w-9 h-auto -rotate-12 opacity-80 z-10 pointer-events-none animate-sway",
+      className: "absolute -top-10 right-4 w-16 h-auto -rotate-12 z-10 pointer-events-none animate-sway",
     },
     {
       src: "/assets/hibiscus_flower/flower_medium_2.svg",
-      className: "absolute -top-4 -right-4 w-12 h-auto rotate-[30deg] opacity-95 z-20 pointer-events-none animate-pulse-slow",
+      className: "absolute -top-6 -right-6 w-20 h-auto rotate-[30deg] z-20 pointer-events-none animate-pulse-solid",
     },
     {
       src: "/assets/hibiscus_flower/petal_2.svg",
-      className: "absolute bottom-2 right-2 w-5 h-auto rotate-45 opacity-75 z-20 pointer-events-none animate-sway",
+      className: "absolute bottom-3 right-3 w-9 h-auto rotate-45 z-20 pointer-events-none animate-sway",
     }
   ];
 };
