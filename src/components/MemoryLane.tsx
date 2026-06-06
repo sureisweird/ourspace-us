@@ -157,6 +157,22 @@ export default function MemoryLane() {
       id="memories"
       className="py-32 px-6 max-w-7xl mx-auto relative z-10"
     >
+      {/* Background Decorative Flowers/Leaves (pointer-events-none, aria-hidden) */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/assets/hibiscus_flower/leaf_1.svg"
+        alt=""
+        className="absolute left-[-6%] top-[15%] w-36 h-auto rotate-45 opacity-10 pointer-events-none z-0 animate-sway hidden lg:block"
+        aria-hidden="true"
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/assets/hibiscus_flower/flower_big_1.svg"
+        alt=""
+        className="absolute right-[-8%] bottom-[10%] w-48 h-auto -rotate-12 opacity-10 pointer-events-none z-0 animate-sway [animation-delay:1.5s] hidden lg:block"
+        aria-hidden="true"
+      />
+
       {/* Section Header */}
       <div className="max-w-xl mb-24">
         <div className="flex items-center gap-2 mb-4">
