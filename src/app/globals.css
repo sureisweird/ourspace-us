@@ -113,6 +113,7 @@
 html {
   scroll-behavior: smooth;
   max-width: 100%;
+  overflow-x: hidden;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
 }
@@ -126,6 +127,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
   max-width: 100%;
+  overflow-x: hidden;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
 }
@@ -168,6 +170,19 @@ body::-webkit-scrollbar {
 
 .animate-pulse-slow {
   animation: pulse-slow 12s ease-in-out infinite;
+}
+
+@keyframes pulse-solid {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-solid {
+  animation: pulse-solid 12s ease-in-out infinite;
 }
 
 @keyframes fade-in {
