@@ -51,22 +51,22 @@ const ASSET_BASE = "/assets/hibiscus_flower";
  * dekoratif (pointer-events-none, aria-hidden) — lihat BouquetAsset.
  * Posisi memakai persentase agar skala mengikuti `.bouquet-wrap`.
  */
-const BOUQUET_LAYERS: { src: string; className: string }[] = [
+const BOUQUET_LAYERS: { src: string; className: string; layer: "back" | "front" }[] = [
   // Daun (lapisan belakang) — leaf_1..3
-  { src: "leaf_3.svg", className: "w-28 left-[6%] top-[14%] -rotate-[28deg] opacity-90" },
-  { src: "leaf_2.svg", className: "w-28 right-[4%] top-[18%] rotate-[34deg] opacity-90" },
-  { src: "leaf_1.svg", className: "w-24 left-[30%] top-[4%] -rotate-[6deg] opacity-95" },
+  { src: "leaf_3.svg", className: "w-28 left-[6%] top-[14%] -rotate-[28deg] opacity-90", layer: "back" },
+  { src: "leaf_2.svg", className: "w-28 right-[4%] top-[18%] rotate-[34deg] opacity-90", layer: "back" },
+  { src: "leaf_1.svg", className: "w-24 left-[30%] top-[4%] -rotate-[6deg] opacity-95", layer: "back" },
   // Bunga medium mengelilingi pusat — flower_medium_1..3
-  { src: "flower_medium_1.svg", className: "w-24 left-[4%] top-[30%] -rotate-12" },
-  { src: "flower_medium_2.svg", className: "w-24 right-[4%] top-[34%] rotate-12" },
-  { src: "flower_medium_3.svg", className: "w-20 left-[34%] top-[12%]" },
+  { src: "flower_medium_1.svg", className: "w-24 left-[4%] top-[30%] -rotate-12", layer: "front" },
+  { src: "flower_medium_2.svg", className: "w-24 right-[4%] top-[34%] rotate-12", layer: "front" },
+  { src: "flower_medium_3.svg", className: "w-20 left-[34%] top-[12%]", layer: "front" },
   // Bunga besar di pusat — flower_big_1
-  { src: "flower_big_1.svg", className: "w-36 left-1/2 top-[26%] -translate-x-1/2" },
+  { src: "flower_big_1.svg", className: "w-36 left-1/2 top-[26%] -translate-x-1/2", layer: "front" },
   // Benang sari sebagai aksen — stamen_1..4
-  { src: "stamen_1.svg", className: "w-12 left-[20%] top-[44%] -rotate-[18deg]" },
-  { src: "stamen_2.svg", className: "w-12 right-[20%] top-[46%] rotate-[18deg]" },
-  { src: "stamen_3.svg", className: "w-10 left-[42%] top-[40%]" },
-  { src: "stamen_4.svg", className: "w-10 right-[34%] top-[30%] rotate-[8deg]" },
+  { src: "stamen_1.svg", className: "w-12 left-[20%] top-[44%] -rotate-[18deg]", layer: "front" },
+  { src: "stamen_2.svg", className: "w-12 right-[20%] top-[46%] rotate-[18deg]", layer: "front" },
+  { src: "stamen_3.svg", className: "w-10 left-[42%] top-[40%]", layer: "front" },
+  { src: "stamen_4.svg", className: "w-10 right-[34%] top-[30%] rotate-[8deg]", layer: "front" },
 ];
 
 /**
@@ -92,7 +92,6 @@ function BouquetAsset({ src, className }: { src: string; className: string }) {
 
 export default function SplitContent() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const leftColRef = useRef<HTMLDivElement>(null);
   const rightColRef = useRef<HTMLDivElement>(null);
 
   useGSAP(
@@ -123,25 +122,40 @@ export default function SplitContent() {
           );
         });
 
-        // Sway gulir bouquet yang halus (animasi ambient → hanya saat gerak penuh).
-        gsap.to(".bouquet-wrap", {
-          rotation: 6,
-          y: -15,
-          ease: "sine.inOut",
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: "top center",
-            end: "bottom bottom",
-            scrub: 1,
-            invalidateOnRefresh: true,
-          },
-        });
+        // 3D Parallax Sway: Lapisan belakang daun bergoyang lebih lambat dan sempit.
+        gsap.fromTo(
+          ".bouquet-sway-back",
+          { rotation: -1.5, y: 0 },
+          {
+            rotation: 1.5,
+            y: -4,
+            duration: 8,
+            ease: "sine.inOut",
+            repeat: -1,
+            yoyo: true,
+          }
+        );
+
+        // 3D Parallax Sway: Lapisan depan bunga & aksen bergoyang lebih cepat dan lebar.
+        gsap.fromTo(
+          ".bouquet-sway-front",
+          { rotation: -3.5, y: 0 },
+          {
+            rotation: 3.5,
+            y: -10,
+            duration: 5,
+            ease: "sine.inOut",
+            repeat: -1,
+            yoyo: true,
+          }
+        );
       });
 
       // Gerak tereduksi: tampilkan keadaan akhir statis, tanpa animasi ambient.
       mm.add("(prefers-reduced-motion: reduce)", () => {
         gsap.set(".greeting-card", { opacity: 1, y: 0 });
-        gsap.set(".bouquet-wrap", { rotation: 0, y: 0 });
+        gsap.set(".bouquet-sway-back", { rotation: 0, y: 0 });
+        gsap.set(".bouquet-sway-front", { rotation: 0, y: 0 });
       });
     },
     { scope: containerRef }
@@ -153,11 +167,11 @@ export default function SplitContent() {
       id="milestones"
       className="py-32 px-6 max-w-7xl mx-auto relative z-10"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-stretch">
 
         {/* Left Column - Sticky Flower Bouquet */}
-        <div className="lg:col-span-5 flex flex-col justify-start">
-          <div ref={leftColRef} className="lg:sticky lg:top-24 h-fit flex flex-col items-center">
+        <div className="lg:col-span-5 relative w-full">
+          <div className="lg:sticky lg:top-24 h-fit flex flex-col items-center w-full">
 
             {/* Visual Heading for Column */}
             <div className="text-center lg:text-left w-full mb-8">
@@ -170,25 +184,42 @@ export default function SplitContent() {
               </h2>
             </div>
 
-            {/* Bouquet composed from Aset_Bunga (R7.5 / R13.3) */}
-            <div className="bouquet-wrap w-72 h-96 relative flex items-center justify-center drop-shadow-[0_15px_30px_rgba(229,152,155,0.15)] bg-surface/50 rounded-card p-6 border border-foreground/5">
-              {/* Lapisan aset bouquet (dekoratif, pointer-events-none + aria-hidden) */}
-              <div className="absolute inset-6 pointer-events-none" aria-hidden="true">
-                {BOUQUET_LAYERS.map((layer) => (
-                  <BouquetAsset key={layer.src} src={layer.src} className={layer.className} />
-                ))}
+            {/* Bouquet Card Container */}
+            <div className="relative w-72 h-96 group/bouquet">
+              {/* Ambient Glow Orb behind the card */}
+              <div 
+                className="absolute -inset-4 bg-radial-gradient from-accent/20 via-blush/10 to-transparent rounded-[3rem] blur-2xl opacity-80 pointer-events-none group-hover/bouquet:opacity-100 transition-opacity duration-700" 
+                aria-hidden="true" 
+              />
+              
+              {/* Main Card Element */}
+              <div className="absolute inset-0 rounded-card glass-surface shadow-elevation-2 border border-foreground/5 overflow-hidden transition-all duration-500 hover:shadow-elevation-3 hover:border-accent/20">
+                <div className="relative w-full h-full flex items-center justify-center p-6">
+                  {/* Lapisan aset bouquet (dekoratif, pointer-events-none + aria-hidden) */}
+                  <div className="absolute inset-6 pointer-events-none" aria-hidden="true">
+                    {BOUQUET_LAYERS.map((layer) => (
+                      <BouquetAsset 
+                        key={layer.src} 
+                        src={layer.src} 
+                        className={`${layer.className} ${
+                          layer.layer === "back" ? "bouquet-sway-back" : "bouquet-sway-front"
+                        }`} 
+                      />
+                    ))}
 
-                {/* Pembungkus bouquet — tint dari Token_Desain (R13.9) */}
-                <div className="absolute bottom-[2%] left-1/2 -translate-x-1/2 w-24 h-24 rounded-b-[3rem] rounded-t-inner bg-surface/80 border border-foreground/5" />
-                <div className="absolute bottom-[16%] left-1/2 -translate-x-1/2 w-32 h-3 rounded-pill bg-accent/60" />
-              </div>
+                    {/* Pembungkus bouquet — tint dari Token_Desain (R13.9) */}
+                    <div className="absolute bottom-[2%] left-1/2 -translate-x-1/2 w-24 h-24 rounded-b-[3rem] rounded-t-inner bg-surface/90 border border-foreground/5 shadow-inner" />
+                    <div className="absolute bottom-[16%] left-1/2 -translate-x-1/2 w-32 h-3 rounded-pill bg-accent/70 shadow-xs" />
+                  </div>
 
-              {/* Floating micro sparks around bouquet (ambient — dimatikan saat reduced-motion via CSS) */}
-              <div className="absolute top-8 left-8 text-accent/50 animate-bounce" aria-hidden="true">
-                <SparkleIcon size={14} weight="fill" />
-              </div>
-              <div className="absolute bottom-16 right-8 text-accent/50 animate-bounce [animation-delay:1.5s]" aria-hidden="true">
-                <SparkleIcon size={16} weight="fill" />
+                  {/* Floating micro sparks around bouquet (ambient — dimatikan saat reduced-motion via CSS) */}
+                  <div className="absolute top-8 left-8 text-accent/50 animate-bounce" aria-hidden="true">
+                    <SparkleIcon size={14} weight="fill" />
+                  </div>
+                  <div className="absolute bottom-16 right-8 text-accent/50 animate-bounce [animation-delay:1.5s]" aria-hidden="true">
+                    <SparkleIcon size={16} weight="fill" />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -200,8 +231,11 @@ export default function SplitContent() {
           {CARDS.map((card, idx) => (
             <div
               key={idx}
-              className="greeting-card bg-surface p-8 md:p-12 rounded-card shadow-elevation-1 border border-foreground/5 hover:shadow-elevation-2 transition-shadow transition-spring relative overflow-hidden group"
+              className="greeting-card bg-surface p-8 md:p-12 rounded-card shadow-elevation-1 border border-foreground/5 hover:shadow-elevation-2 hover:-translate-y-1.5 transition-all duration-500 transition-spring relative overflow-hidden group"
             >
+              {/* Subtle top indicator line on hover */}
+              <div className="absolute top-0 left-0 right-0 h-[3px] bg-linear-to-r from-accent/40 via-accent to-accent/40 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-700 transition-spring origin-left" />
+
               {/* Subtle background color hue pattern */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-bl from-accent/10 to-transparent opacity-60 rounded-bl-full pointer-events-none transition-transform transition-spring group-hover:scale-110" />
 
@@ -210,13 +244,13 @@ export default function SplitContent() {
                 <span className="font-mono text-xs text-accent tracking-[0.2em] font-semibold uppercase">
                   {card.year}
                 </span>
-                <span className="font-mono text-[10px] text-foreground/55 tracking-wider uppercase border border-foreground/10 px-3 py-1 rounded-pill bg-background">
+                <span className="font-mono text-[10px] text-foreground/55 tracking-wider uppercase border border-foreground/10 px-3 py-1 rounded-pill bg-background/80 backdrop-blur-xs">
                   {card.milestone}
                 </span>
               </div>
 
               {/* Card Headline */}
-              <h3 className="text-2xl md:text-3xl font-sans font-light text-foreground tracking-tight mb-4">
+              <h3 className="text-2xl md:text-3xl font-sans font-light text-foreground tracking-tight mb-4 group-hover:text-accent-strong transition-colors duration-300">
                 {card.title}
               </h3>
 
