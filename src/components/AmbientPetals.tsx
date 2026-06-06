@@ -19,7 +19,7 @@ interface PetalItem {
   asset: string;
 }
 
-export default function AmbientPetals() {
+export default function AmbientPetals({ solid = false }: { solid?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [mountedPetals, setMountedPetals] = useState<PetalItem[]>([]);
 
@@ -56,7 +56,7 @@ export default function AmbientPetals() {
             x: ((index * 7) % 85 + 5) / 100 * w,
             y: ((index * 11) % 80 + 10) / 100 * h,
             scale: 0.6 + (index % 5) * 0.15,
-            opacity: 0.25,
+            opacity: solid ? 1 : 0.25,
             rotation: index * 25,
             rotationX: 0,
             rotationY: 0,
@@ -134,7 +134,7 @@ export default function AmbientPetals() {
           ease: "none",
           onStart: () => {
             // Efek memudar masuk secara lembut saat baru lahir
-            gsap.to(el, { opacity: 0.5, duration: 3, ease: "power1.inOut" });
+            gsap.to(el, { opacity: solid ? 1 : 0.5, duration: 3, ease: "power1.inOut" });
           },
           onComplete: () => {
             // Loop berulang dengan koordinat acak baru
