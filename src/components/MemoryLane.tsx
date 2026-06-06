@@ -1,15 +1,12 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { Heart } from "@phosphor-icons/react";
+import { Heart, X } from "@phosphor-icons/react";
 
 interface PolaroidItem {
   id: number;
-  // FIX #5: Gunakan path lokal /images/ sebagai sumber utama.
-  // Letakkan foto di: /public/images/memory-1.jpg, memory-2.jpg, dst.
-  // onError fallback ke Unsplash kalau file belum ada.
   localUrl: string;
   fallbackUrl: string;
   caption: string;
@@ -69,6 +66,24 @@ const MEMORIES: PolaroidItem[] = [
 export default function MemoryLane() {
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Lightbox: foto yang sedang dibuka besar (null = tertutup)
+  const [selected, setSelected] = useState<PolaroidItem | null>(null);
+
+  // Tutup dengan Escape + kunci scroll body selama lightbox terbuka
+  useEffect(() => {
+    if (!selected) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelected(null);
+    };
+    document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [selected]);
+
   useGSAP(
     () => {
       const cards = gsap.utils.toArray<HTMLElement>(".polaroid-card");
@@ -77,12 +92,6 @@ export default function MemoryLane() {
         const initialRotation = gsap.utils.random(-5, 5);
         gsap.set(card, { rotation: initialRotation, transformOrigin: "center center" });
 
-        // FIX: simpan referensi tween float. Sebelumnya tween hover memakai
-        // overwrite:"auto" yang mematikan tween float secara permanen (keduanya
-        // sama-sama menganimasikan `rotation`), sehingga animasi mengambang
-        // hilang setelah kartu pertama kali di-hover. Sekarang float hanya
-        // menganimasikan x/y (tidak ada properti yang bentrok dengan hover),
-        // lalu di-pause saat hover dan di-resume setelah pointer keluar.
         const floatTween = gsap.to(card, {
           y: () => `+=${gsap.utils.random(-8, 8)}`,
           x: () => `+=${gsap.utils.random(-4, 4)}`,
@@ -148,6 +157,16 @@ export default function MemoryLane() {
         {MEMORIES.map((memory) => (
           <div
             key={memory.id}
+            onClick={() => setSelected(memory)}
+            role="button"
+            tabIndex={0}
+            aria-label={`Buka foto: ${memory.caption}`}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setSelected(memory);
+              }
+            }}
             className={`polaroid-card bg-white p-4 pb-6 rounded-sm shadow-md border border-[#F2E5E3]/40 flex flex-col justify-between h-fit cursor-pointer transition-shadow ${memory.colSpanClass} ${memory.offsetClass}`}
             style={{ perspective: 1000 }}
           >
@@ -183,6 +202,60 @@ export default function MemoryLane() {
           </div>
         ))}
       </div>
+
+      {/* Lightbox foto */}
+      {selected && (
+        <div
+          className="fixed inset-0 z-70 flex items-center justify-center p-6 bg-[#170E0D]/80 backdrop-blur-sm animate-fade-in"
+          onClick={() => setSelected(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={selected.caption}
+        >
+          <button
+            type="button"
+            aria-label="Tutup foto"
+            onClick={() => setSelected(null)}
+            className="absolute top-6 right-6 w-11 h-11 rounded-full bg-[#FFFBF9]/90 border border-[#F2E5E3] flex items-center justify-center text-[#2A1F1D]/70 hover:text-[#2A1F1D] hover:bg-white shadow-md active:scale-95 transition-all"
+          >
+            <X size={18} weight="bold" />
+          </button>
+
+          <figure
+            className="animate-zoom-in bg-white p-4 pb-6 rounded-sm shadow-2xl max-w-lg w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative aspect-4/3 w-full overflow-hidden bg-[#FFFBF9] rounded-sm mb-4 border border-[#F2E5E3]/30">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={selected.localUrl}
+                alt={selected.caption}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  const img = e.currentTarget;
+                  if (img.src !== selected.fallbackUrl) {
+                    img.src = selected.fallbackUrl;
+                  }
+                }}
+              />
+            </div>
+
+            <figcaption className="px-1 flex flex-col gap-2">
+              <p className="font-cursive text-3xl text-[#2A1F1D]/90 leading-tight">
+                {selected.caption}
+              </p>
+              <div className="flex justify-between items-center border-t border-[#F2E5E3]/40 pt-2">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-[#2A1F1D]/60">
+                  {selected.date}
+                </span>
+                <span className="font-mono text-[9px] text-[#2A1F1D]/40 uppercase tracking-widest">
+                  No. 00{selected.id}
+                </span>
+              </div>
+            </figcaption>
+          </figure>
+        </div>
+      )}
     </section>
   );
 }
