@@ -250,9 +250,82 @@ export default function Home() {
             <MemoryLane />
             <SplitContent />
             <MusicLetterFooter audioRef={audioRef} />
-            <div className="py-12 border-t border-foreground/10 text-center font-mono text-[10px] text-foreground/50 tracking-widest uppercase">
-              <span>Made with love &copy; {new Date().getFullYear()}</span>
-            </div>
+            <footer className="relative py-12 w-full border-t border-foreground/10">
+              {/* Background Flowers at the bottom (tumpukan bunga melimpah di bagian paling bawah halaman, solid) */}
+              <div className="absolute inset-0 pointer-events-none z-0 hidden lg:block" aria-hidden="true">
+                {/* Dedaunan dasar di sepanjang dasar halaman */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/leaf_1.svg" alt="" className="absolute left-[5%] -bottom-8 w-48 h-auto rotate-12 animate-sway" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/leaf_1.svg" alt="" className="absolute left-[12%] -bottom-8 w-52 h-auto rotate-35 animate-sway [animation-delay:0.3s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/leaf_2.svg" alt="" className="absolute left-[20%] -bottom-12 w-52 h-auto -rotate-15 animate-sway [animation-delay:0.5s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/leaf_2.svg" alt="" className="absolute left-[30%] bottom-[-2.5rem] w-56 h-auto -rotate-40 animate-sway [animation-delay:0.8s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/leaf_3.svg" alt="" className="absolute left-[40%] -bottom-8 w-44 h-auto rotate-45 animate-sway [animation-delay:1.2s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/leaf_3.svg" alt="" className="absolute left-[55%] -bottom-8 w-44 h-auto rotate-25 animate-sway [animation-delay:1.0s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/leaf_1.svg" alt="" className="absolute right-[35%] -bottom-12 w-48 h-auto -rotate-30 animate-sway [animation-delay:0.7s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/leaf_2.svg" alt="" className="absolute right-[15%] -bottom-8 w-56 h-auto rotate-15 animate-sway [animation-delay:1.5s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/leaf_2.svg" alt="" className="absolute right-[28%] -bottom-8 w-48 h-auto rotate-15 animate-sway [animation-delay:1.2s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/leaf_3.svg" alt="" className="absolute -right-8 -bottom-8 w-52 h-auto -rotate-12 animate-sway [animation-delay:0.3s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/leaf_3.svg" alt="" className="absolute right-[40%] bottom-[-2.5rem] w-52 h-auto -rotate-15 animate-sway [animation-delay:0.5s]" />
+                
+                {/* Bunga-bunga Besar */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/flower_big_1.svg" alt="" className="absolute left-[10%] -bottom-16 w-64 h-auto rotate-12 animate-pulse-solid" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/flower_big_1.svg" alt="" className="absolute left-[25%] -bottom-16 w-64 h-auto rotate-15 animate-pulse-solid [animation-delay:1.1s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/flower_big_1.svg" alt="" className="absolute right-[8%] -bottom-12 w-64 h-auto -rotate-12 animate-pulse-solid [animation-delay:1.5s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/flower_big_1.svg" alt="" className="absolute right-[30%] -bottom-18 w-64 h-auto -rotate-25 animate-pulse-solid [animation-delay:0.4s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/flower_big_1.svg" alt="" className="absolute left-[45%] -bottom-16 w-60 h-auto rotate-45 animate-pulse-solid [animation-delay:0.8s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/flower_big_1.svg" alt="" className="absolute left-[60%] -bottom-14 w-60 h-auto rotate-30 animate-pulse-solid [animation-delay:1.6s]" />
+
+                {/* Bunga-bunga Medium */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/flower_medium_2.svg" alt="" className="absolute left-[28%] -bottom-8 w-48 h-auto -rotate-30 animate-sway [animation-delay:0.4s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/flower_medium_2.svg" alt="" className="absolute -right-4 -bottom-8 w-48 h-auto -rotate-45 animate-sway [animation-delay:1.6s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/flower_medium_3.svg" alt="" className="absolute right-[25%] -bottom-12 w-44 h-auto rotate-20 animate-sway [animation-delay:1.1s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/flower_medium_3.svg" alt="" className="absolute right-[20%] bottom-[-2.5rem] w-48 h-auto -rotate-15 animate-sway [animation-delay:0.2s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/flower_medium_1.svg" alt="" className="absolute -left-8 -bottom-8 w-48 h-auto rotate-45 animate-sway [animation-delay:0.9s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/flower_medium_1.svg" alt="" className="absolute left-[15%] bottom-[-2.5rem] w-48 h-auto -rotate-12 animate-sway [animation-delay:0.7s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/flower_medium_2.svg" alt="" className="absolute left-[35%] -bottom-8 w-44 h-auto rotate-45 animate-sway [animation-delay:1.3s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/flower_medium_2.svg" alt="" className="absolute left-[50%] bottom-[-2.5rem] w-44 h-auto -rotate-30 animate-sway [animation-delay:1.4s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/flower_medium_3.svg" alt="" className="absolute right-[45%] -bottom-12 w-40 h-auto rotate-60 animate-sway [animation-delay:0.9s]" />
+
+                {/* Benang Sari */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/stamen_1.svg" alt="" className="absolute left-[18%] bottom-8 w-12 h-auto rotate-10 animate-sway" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/stamen_2.svg" alt="" className="absolute right-[18%] bottom-12 w-11 h-auto -rotate-15 animate-sway [animation-delay:0.5s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/stamen_3.svg" alt="" className="absolute left-[52%] bottom-8 w-10 h-auto rotate-25 animate-sway [animation-delay:1s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/stamen_4.svg" alt="" className="absolute left-[32%] bottom-[2.5rem] w-12 h-auto rotate-15 animate-sway" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/stamen_3.svg" alt="" className="absolute right-[32%] bottom-[2.5rem] w-11 h-auto -rotate-20 animate-sway [animation-delay:0.8s]" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/hibiscus_flower/stamen_1.svg" alt="" className="absolute left-[62%] bottom-12 w-10 h-auto rotate-10 animate-sway [animation-delay:1.4s]" />
+              </div>
+            </footer>
           </main>
         </>
       )}
