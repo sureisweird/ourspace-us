@@ -1,64 +1,86 @@
 "use client";
 
-import React from "react";
+import { useState } from "react";
+
+const ASSET_BASE = "/assets/hibiscus_flower";
 
 /**
- * Dekorasi bunga untuk mengisi area hero yang sebelumnya terasa kosong.
- * Semua elemen `pointer-events-none` dan diletakkan pada lapisan z-0 sehingga
- * berada di belakang teks. Ditempatkan di dalam container ber-`relative`.
+ * Aset_Bunga dekoratif (R13.1, R13.5). Dirender sebagai <img> polos dengan
+ * alt="" + aria-hidden. Bila aset gagal dimuat, elemen disembunyikan secara
+ * anggun (graceful degradation, R13.6) tanpa merusak tata letak di sekitarnya.
  */
+function DecorImage({
+  name,
+  className,
+  style,
+}: {
+  name: string;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const [failed, setFailed] = useState(false);
 
-// Rangkaian bunga sudut (dipakai untuk kiri & kanan secara mirror).
-function CornerSpray({ className }: { className?: string }) {
+  if (failed) return null;
+
   return (
-    <svg viewBox="0 0 200 220" className={className} aria-hidden="true">
-      {/* Tangkai */}
-      <g stroke="#A8BE92" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.8">
-        <path d="M 28 218 C 50 170 60 140 70 100" />
-        <path d="M 28 218 C 45 178 85 150 118 118" />
-        <path d="M 28 218 C 38 182 50 152 46 108" />
-      </g>
-
-      {/* Daun */}
-      <g fill="#B6C9A0" opacity="0.85">
-        <path d="M 58 152 C 38 147 34 128 50 124 C 60 130 64 144 58 152 Z" />
-        <path d="M 98 134 C 116 125 128 132 119 148 C 106 153 98 146 98 134 Z" />
-        <path d="M 44 178 C 28 176 24 160 40 158 C 48 164 50 172 44 178 Z" />
-      </g>
-
-      {/* Mawar tengah (besar) */}
-      <g transform="translate(70, 92)">
-        <circle r="25" fill="#FFC8DD" />
-        <path d="M -16 -11 C -6 -27 11 -22 17 -6 C 6 16 -11 11 -16 -11 Z" fill="#FFA2B6" opacity="0.85" />
-        <path d="M -9 6 C 6 -11 17 -6 9 13 C -2 16 -6 11 -9 6 Z" fill="#FF85A1" opacity="0.9" />
-        <circle r="6" fill="#FF7096" />
-      </g>
-
-      {/* Mawar kanan atas */}
-      <g transform="translate(118, 112)">
-        <circle r="18" fill="#FFE5D9" />
-        <path d="M -11 -8 C 2 -18 17 -13 10 -1 C 2 12 -12 8 -11 -8 Z" fill="#FFCAD4" opacity="0.85" />
-        <circle r="4.5" fill="#E5989B" />
-      </g>
-
-      {/* Kuncup bawah kiri */}
-      <g transform="translate(46, 112)">
-        <ellipse rx="12" ry="14" fill="#FFD1DC" />
-        <path d="M -6 5 C -1 -9 10 -9 7 5 Z" fill="#FFB7B2" />
-        <circle r="3" fill="#E5989B" />
-      </g>
-    </svg>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={`${ASSET_BASE}/${name}`}
+      alt=""
+      aria-hidden="true"
+      draggable={false}
+      onError={() => setFailed(true)}
+      className={className}
+      style={style}
+    />
   );
 }
 
-// Satu kuntum mawar kecil untuk aksen melayang.
-function SmallRose({ className }: { className?: string }) {
+/**
+ * Rangkaian bunga sudut yang disusun dari komposisi Aset_Bunga (flower_medium_*,
+ * leaf_*, petal_*). Dipakai untuk sudut kiri & kanan bawah (kanan di-mirror via
+ * scale-x-[-1] dari pemanggil). Animasi ambient memakai kelas `animate-sway`
+ * sehingga otomatis dipatuhi reduced-motion lewat CSS di globals.css (R13.8).
+ */
+function CornerSpray({ className }: { className?: string }) {
   return (
-    <svg viewBox="-26 -26 52 52" className={className} aria-hidden="true">
-      <circle r="20" fill="#FFD1DC" />
-      <path d="M -14 -9 C -5 -23 10 -19 15 -5 C 5 14 -9 9 -14 -9 Z" fill="#FFB7B2" opacity="0.85" />
-      <circle r="5" fill="#FF85A1" />
-    </svg>
+    <div className={`relative aspect-[5/6] ${className ?? ""}`}>
+      {/* Tint/glow lembut di sekitar aset memakai Token_Desain (R13.9) */}
+      <div
+        className="absolute left-[18%] top-[34%] h-3/5 w-3/5 rounded-full bg-accent opacity-20 blur-2xl"
+        aria-hidden="true"
+      />
+
+      {/* Dedaunan dasar */}
+      <DecorImage
+        name="leaf_2.svg"
+        className="absolute bottom-0 left-[2%] w-[58%] origin-bottom-left -rotate-[18deg]"
+      />
+      <DecorImage
+        name="leaf_1.svg"
+        className="absolute bottom-[14%] left-[30%] w-[52%] origin-bottom -rotate-[2deg] opacity-95"
+      />
+      <DecorImage
+        name="leaf_3.svg"
+        className="absolute bottom-[6%] left-[42%] w-[46%] origin-bottom-right rotate-[24deg] opacity-90"
+      />
+
+      {/* Bunga utama */}
+      <DecorImage
+        name="flower_medium_1.svg"
+        className="absolute bottom-[24%] left-[8%] w-[52%]"
+      />
+      {/* Bunga sekunder lebih kecil */}
+      <DecorImage
+        name="flower_medium_2.svg"
+        className="absolute bottom-[40%] left-[44%] w-[40%]"
+      />
+      {/* Kuncup/aksen kelopak */}
+      <DecorImage
+        name="petal_3.svg"
+        className="absolute bottom-[10%] left-[24%] w-[20%] rotate-[12deg] opacity-85"
+      />
+    </div>
   );
 }
 
@@ -70,19 +92,28 @@ export default function FloralDecor() {
       aria-hidden="true"
     >
       {/* Sudut kiri bawah */}
-      <div className="absolute -left-4 -bottom-10 w-40 md:w-56">
-        <CornerSpray className="w-full h-auto animate-sway" />
+      <div className="absolute -bottom-10 -left-4 w-40 md:w-56">
+        <CornerSpray className="w-full animate-sway" />
       </div>
 
       {/* Sudut kanan bawah (mirror) */}
-      <div className="absolute -right-4 -bottom-10 w-40 md:w-56 scale-x-[-1]">
-        <CornerSpray className="w-full h-auto animate-sway [animation-delay:1.3s]" />
+      <div className="absolute -bottom-10 -right-4 w-40 scale-x-[-1] md:w-56">
+        <CornerSpray className="w-full animate-sway [animation-delay:1.3s]" />
       </div>
 
-      {/* Aksen mawar kecil melayang */}
-      <SmallRose className="absolute left-6 top-2 w-9 md:w-12 opacity-80 animate-pulse-slow" />
-      <SmallRose className="absolute right-10 top-6 w-7 md:w-10 opacity-70 animate-pulse-slow [animation-delay:2s]" />
-      <SmallRose className="absolute left-1/4 bottom-10 w-6 md:w-8 opacity-60 animate-pulse-slow [animation-delay:3.5s]" />
+      {/* Aksen bunga kecil melayang */}
+      <DecorImage
+        name="flower_medium_3.svg"
+        className="absolute left-6 top-2 w-9 opacity-80 animate-pulse-slow md:w-12"
+      />
+      <DecorImage
+        name="petal_1.svg"
+        className="absolute right-10 top-6 w-7 opacity-70 animate-pulse-slow [animation-delay:2s] md:w-10"
+      />
+      <DecorImage
+        name="petal_5.svg"
+        className="absolute bottom-10 left-1/4 w-6 opacity-60 animate-pulse-slow [animation-delay:3.5s] md:w-8"
+      />
     </div>
   );
 }

@@ -1,10 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import type { RefObject } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import { Play, Pause, CaretRight, CaretLeft, Heart, MusicNote } from "@phosphor-icons/react";
+import {
+  PlayIcon,
+  PauseIcon,
+  CaretRightIcon,
+  CaretLeftIcon,
+  HeartIcon,
+  MusicNoteIcon,
+} from "@phosphor-icons/react";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -61,7 +69,7 @@ function Equalizer({ playing }: { playing: boolean }) {
 }
 
 interface RetroIpodFooterProps {
-  audioRef: React.RefObject<HTMLAudioElement | null>;
+  audioRef: RefObject<HTMLAudioElement | null>;
 }
 
 export default function RetroIpodFooter({ audioRef }: RetroIpodFooterProps) {
@@ -83,9 +91,9 @@ export default function RetroIpodFooter({ audioRef }: RetroIpodFooterProps) {
   const vinylRef = useRef<HTMLDivElement>(null);
   const rotateTween = useRef<gsap.core.Tween | null>(null);
   const letterRef = useRef<HTMLDivElement>(null);
+  // Penanda agar auto-play (R8.7) hanya dicoba sekali.
+  const autoPlayAttempted = useRef(false);
 
-  // FIX #2: progress diturunkan langsung dari currentTime & duration audio,
-  // bukan dari interval terpisah yang tidak sinkron.
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   // Mulai efek mengetik saat surat masuk viewport (sekali saja).
@@ -147,6 +155,31 @@ export default function RetroIpodFooter({ audioRef }: RetroIpodFooterProps) {
     const audio = audioRef.current;
     if (!audio) return;
 
+    // Auto-play saat pemutar berhasil dimuat (R8.7).
+    // Dicoba sekali, idempotent: jika audio sudah diputar (mis. dari gesture tap
+    // di GiftBoxHero) jangan saling tabrakan; cukup sinkronkan status. Jika
+    // diblokir browser, fallback mulus ke mode siap-putar tanpa error mengganggu.
+    const tryAutoPlay = () => {
+      if (autoPlayAttempted.current) return;
+      const el = audioRef.current;
+      if (!el || el.error) return; // audio tidak tersedia → biarkan mode visual
+      autoPlayAttempted.current = true;
+
+      // Sudah diputar sebelumnya (gesture GiftBoxHero) → cukup sinkronkan.
+      if (!el.paused) {
+        setIsPlaying(true);
+        return;
+      }
+
+      el
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch(() => {
+          // Diblokir browser → tetap siap-putar (bisa diputar manual).
+          setIsPlaying(false);
+        });
+    };
+
     // Sync initial state if audio is already playing/loaded/errored from page-level trigger
     setIsPlaying(!audio.paused);
     setCurrentTime(audio.currentTime);
@@ -158,6 +191,8 @@ export default function RetroIpodFooter({ audioRef }: RetroIpodFooterProps) {
       setDuration(365);
     } else {
       setAudioAvailable(true);
+      // Jika audio sudah siap saat efek berjalan, coba auto-play langsung.
+      if (audio.readyState >= 2) tryAutoPlay();
     }
 
     // Sinkronkan waktu ke state setiap kali audio update
@@ -168,6 +203,10 @@ export default function RetroIpodFooter({ audioRef }: RetroIpodFooterProps) {
       setDuration(audio.duration);
       setAudioAvailable(true);
     };
+
+    // Pemutar berhasil dimuat → coba auto-play (R8.7).
+    const onCanPlay = () => tryAutoPlay();
+    const onLoadedData = () => tryAutoPlay();
 
     // Lagu selesai → reset ke awal
     const onEnded = () => {
@@ -184,19 +223,21 @@ export default function RetroIpodFooter({ audioRef }: RetroIpodFooterProps) {
 
     audio.addEventListener("timeupdate", onTimeUpdate);
     audio.addEventListener("loadedmetadata", onLoadedMetadata);
+    audio.addEventListener("canplay", onCanPlay);
+    audio.addEventListener("loadeddata", onLoadedData);
     audio.addEventListener("ended", onEnded);
     audio.addEventListener("error", onError);
 
     return () => {
       audio.removeEventListener("timeupdate", onTimeUpdate);
       audio.removeEventListener("loadedmetadata", onLoadedMetadata);
+      audio.removeEventListener("canplay", onCanPlay);
+      audio.removeEventListener("loadeddata", onLoadedData);
       audio.removeEventListener("ended", onEnded);
       audio.removeEventListener("error", onError);
     };
   }, [audioRef]);
 
-  // ── Fallback: jika tidak ada audio, simulasi progress visual ────────────
-  // Mode ini aktif jika SONG_SRC tidak ditemukan (audioAvailable = false)
   useEffect(() => {
     if (audioAvailable || !isPlaying) return;
 
@@ -279,24 +320,24 @@ export default function RetroIpodFooter({ audioRef }: RetroIpodFooterProps) {
   const letterVisible = reducedMotion ? LETTER_TEXT : LETTER_TEXT.slice(0, typedCount);
   const letterParas = letterVisible.split("\n\n");
   const letterTyping = letterStarted && !reducedMotion && typedCount < LETTER_TEXT.length;
-  const letterFinished = reducedMotion || typedCount >= LETTER_TEXT.length;
+  const letterFinished = typedCount >= LETTER_TEXT.length;
 
   return (
     <footer
       id="letter"
-      className="py-32 px-6 max-w-7xl mx-auto relative z-10 border-t border-[#F2E5E3]"
+      className="py-32 px-6 max-w-7xl mx-auto relative z-10 border-t border-foreground/10"
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
 
         {/* Left Column - Retro iPod UI */}
         <div className="lg:col-span-5 flex flex-col items-center justify-center">
 
-          <span className="font-mono text-xs tracking-[0.25em] uppercase text-[#2A1F1D]/65 mb-8">
+          <span className="font-mono text-xs tracking-[0.25em] uppercase text-foreground/65 mb-8">
             Our Soundtrack
           </span>
 
           {/* iPod Outer Case */}
-          <div className="w-[300px] h-[480px] bg-[#FFFBF9] rounded-[38px] p-5 shadow-2xl border-4 border-[#EAE0DE] flex flex-col justify-between items-center relative filter drop-shadow-[0_20px_40px_rgba(42,31,29,0.12)]">
+          <div className="w-[300px] h-[480px] bg-surface rounded-[38px] p-5 shadow-elevation-3 border-4 border-[#EAE0DE] flex flex-col justify-between items-center relative">
 
             {/* iPod Screen */}
             <div className="w-full h-[180px] bg-[#EEF5E6] rounded-xl border-4 border-[#DDD5D2] p-4 flex flex-col justify-between relative overflow-hidden select-none">
@@ -304,7 +345,7 @@ export default function RetroIpodFooter({ audioRef }: RetroIpodFooterProps) {
               {/* Screen Top Bar */}
               <div className="flex justify-between items-center text-[10px] font-mono text-[#4A5340] border-b border-[#D4DDD0]/60 pb-1">
                 <span className="flex items-center gap-1">
-                  <MusicNote size={10} weight="fill" />
+                  <MusicNoteIcon size={10} weight="fill" />
                   {audioAvailable ? "Playing" : "No Audio"}
                 </span>
                 <span className="flex items-center gap-1.5 font-semibold">
@@ -331,7 +372,7 @@ export default function RetroIpodFooter({ audioRef }: RetroIpodFooterProps) {
                     <div className="absolute inset-4 rounded-full border border-zinc-800/40" />
                     <div className="absolute inset-6 rounded-full border border-zinc-800/40" />
                     <div className="w-7 h-7 bg-[#FFB7B2] rounded-full border border-zinc-100 flex items-center justify-center">
-                      <Heart size={10} weight="fill" className="text-white animate-pulse" />
+                      <HeartIcon size={10} weight="fill" className="text-white animate-pulse" />
                     </div>
                   </div>
                 </div>
@@ -375,17 +416,17 @@ export default function RetroIpodFooter({ audioRef }: RetroIpodFooterProps) {
               <button
                 onClick={togglePlay}
                 aria-label={isPlaying ? "Pause lagu" : "Putar lagu"}
-                className="w-16 h-16 rounded-full bg-[#FFFBF9] border border-[#DDD5D2] shadow flex items-center justify-center hover:bg-[#FFEAE8] active:scale-95 transition-transform z-20 cursor-pointer"
+                className="focus-ring w-16 h-16 rounded-full bg-surface border border-[#DDD5D2] shadow-elevation-1 flex items-center justify-center hover:bg-[#FFEAE8] active:scale-95 transition-spring transition-transform z-20 cursor-pointer"
               >
                 {isPlaying ? (
-                  <Pause size={20} weight="fill" className="text-[#E5989B]" />
+                  <PauseIcon size={20} weight="fill" className="text-accent" />
                 ) : (
-                  <Play size={20} weight="fill" className="text-[#E5989B] translate-x-px" />
+                  <PlayIcon size={20} weight="fill" className="text-accent translate-x-px" />
                 )}
               </button>
 
               {/* MENU (Top) */}
-              <span className="absolute top-4 font-mono text-xs font-bold text-[#8A7E7B] select-none hover:text-[#2A1F1D]">
+              <span className="absolute top-4 font-mono text-xs font-bold text-[#8A7E7B] select-none hover:text-foreground">
                 MENU
               </span>
 
@@ -393,27 +434,27 @@ export default function RetroIpodFooter({ audioRef }: RetroIpodFooterProps) {
               <button
                 onClick={handleSkipForward}
                 aria-label="Maju 15 detik"
-                className="absolute right-4 p-1 text-[#8A7E7B] hover:text-[#2A1F1D] active:scale-90 transition-transform cursor-pointer"
+                className="focus-ring absolute right-4 p-1 text-[#8A7E7B] hover:text-foreground active:scale-90 transition-spring transition-transform cursor-pointer"
               >
-                <CaretRight size={20} weight="bold" />
+                <CaretRightIcon size={20} weight="bold" />
               </button>
 
               {/* Rewind -15s (Left) */}
               <button
                 onClick={handleRewind}
                 aria-label="Mundur 15 detik"
-                className="absolute left-4 p-1 text-[#8A7E7B] hover:text-[#2A1F1D] active:scale-90 transition-transform cursor-pointer"
+                className="focus-ring absolute left-4 p-1 text-[#8A7E7B] hover:text-foreground active:scale-90 transition-spring transition-transform cursor-pointer"
               >
-                <CaretLeft size={20} weight="bold" />
+                <CaretLeftIcon size={20} weight="bold" />
               </button>
 
               {/* Play/Pause icon (Bottom) */}
               <div
                 onClick={togglePlay}
-                className="absolute bottom-4 flex items-center gap-1 text-[#8A7E7B] hover:text-[#2A1F1D]"
+                className="absolute bottom-4 flex items-center gap-1 text-[#8A7E7B] hover:text-foreground"
               >
-                <Play size={10} weight="fill" />
-                <Pause size={10} weight="fill" />
+                <PlayIcon size={10} weight="fill" />
+                <PauseIcon size={10} weight="fill" />
               </div>
 
             </div>
@@ -422,9 +463,9 @@ export default function RetroIpodFooter({ audioRef }: RetroIpodFooterProps) {
 
           {/* Hint text jika audio file belum ditambahkan */}
           {!audioAvailable && (
-            <p className="mt-4 text-center font-mono text-[10px] text-[#2A1F1D]/40 max-w-[260px]">
+            <p className="mt-4 text-center font-mono text-[10px] text-foreground/40 max-w-[260px]">
               Tambahkan lagu ke{" "}
-              <code className="bg-[#F2E5E3] px-1 rounded">/public/music/our-song.mp3</code>{" "}
+              <code className="bg-accent/10 px-1 rounded">/public/music/our-song.mp3</code>{" "}
               untuk memutar musik nyata.
             </p>
           )}
@@ -434,7 +475,7 @@ export default function RetroIpodFooter({ audioRef }: RetroIpodFooterProps) {
         {/* Right Column - Love Letter */}
         <div className="lg:col-span-7 flex flex-col justify-center">
 
-          <div ref={letterRef} className="bg-[#FFFDF9] border border-[#F2E5E3] p-8 md:p-12 rounded-4xl shadow-xl relative overflow-hidden max-w-xl mx-auto lg:mx-0 filter drop-shadow-[0_10px_25px_rgba(42,31,29,0.05)]">
+          <div ref={letterRef} className="bg-surface border border-foreground/10 p-8 md:p-12 rounded-card shadow-elevation-2 relative overflow-hidden max-w-xl mx-auto lg:mx-0">
 
             {/* Lined stationery paper effect */}
             <div
@@ -447,49 +488,59 @@ export default function RetroIpodFooter({ audioRef }: RetroIpodFooterProps) {
             />
 
             {/* Wax seal */}
-            <div className="absolute top-6 right-6 w-12 h-12 bg-linear-to-tr from-[#9B5DE5]/20 to-[#E5989B]/40 rounded-full flex items-center justify-center border border-[#E5989B]/20 transform rotate-12 pointer-events-none">
-              <div className="w-9 h-9 bg-linear-to-tr from-[#E5989B] to-[#FFB7B2] rounded-full flex items-center justify-center shadow-md border border-white/40">
-                <Heart size={14} weight="fill" className="text-white" />
+            <div className="absolute top-6 right-6 w-12 h-12 bg-linear-to-tr from-[#9B5DE5]/20 to-accent/40 rounded-full flex items-center justify-center border border-accent/20 transform rotate-12 pointer-events-none">
+              <div className="w-9 h-9 bg-linear-to-tr from-accent to-[#FFB7B2] rounded-full flex items-center justify-center shadow-md border border-white/40">
+                <HeartIcon size={14} weight="fill" className="text-white" />
               </div>
             </div>
 
             {/* Letter Header */}
             <div className="mb-8 relative z-10">
-              <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#E5989B]">
+              <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-accent">
                 To My Forever
               </span>
-              <h3 className="font-cursive text-4xl text-[#2A1F1D] mt-2">
+              <h3 className="font-cursive text-4xl text-foreground mt-2">
                 My Dearest,
               </h3>
             </div>
+            <div className="font-cursive text-2xl md:text-3xl text-foreground/85 leading-8 relative z-10">
+              {reducedMotion ? (
+                /* Fallback Gerak_Tereduksi (R8.6): render seluruh teks surat
+                   langsung di DOM dalam alur normal — tetap terbaca walau
+                   styling/animasi typing gagal diterapkan. */
+                <div className="flex flex-col gap-6 pl-2">
+                  {LETTER_PARAGRAPHS.map((para, i) => (
+                    <p key={i}>{para}</p>
+                  ))}
+                  <p className="mt-8 text-right text-accent">Always &amp; Forever Yours</p>
+                </div>
+              ) : (
+                <>
+                  {/* Sizer tak terlihat agar tinggi kartu stabil saat mengetik. */}
+                  <div aria-hidden="true" className="invisible flex flex-col gap-6 pl-2">
+                    {LETTER_PARAGRAPHS.map((para, i) => (
+                      <p key={i}>{para}</p>
+                    ))}
+                    <p className="mt-8 text-right">Always &amp; Forever Yours</p>
+                  </div>
 
-            {/* Letter Body — diketik seperti tulisan tangan.
-                Lapisan "ghost" (invisible) mereservasi tinggi final agar tidak
-                ada layout shift saat teks bertambah; teks yang terlihat
-                ditumpuk di atasnya secara absolute. */}
-            <div className="font-cursive text-2xl md:text-3xl text-[#2A1F1D]/85 leading-8 relative z-10">
-              <div aria-hidden="true" className="invisible flex flex-col gap-6 pl-2">
-                {LETTER_PARAGRAPHS.map((para, i) => (
-                  <p key={i}>{para}</p>
-                ))}
-                <p className="mt-8 text-right">Always &amp; Forever Yours</p>
-              </div>
-
-              <div className="absolute inset-0 flex flex-col gap-6 pl-2">
-                {letterParas.map((para, i) => (
-                  <p key={i}>
-                    {para}
-                    {letterTyping && i === letterParas.length - 1 && (
-                      <span className="inline-block w-[2px] h-[1em] align-middle bg-[#E5989B] ml-0.5 animate-blink" />
+                  <div className="absolute inset-0 flex flex-col gap-6 pl-2">
+                    {letterParas.map((para, i) => (
+                      <p key={i}>
+                        {para}
+                        {letterTyping && i === letterParas.length - 1 && (
+                          <span className="inline-block w-[2px] h-[1em] align-middle bg-accent ml-0.5 animate-blink" />
+                        )}
+                      </p>
+                    ))}
+                    {letterFinished && (
+                      <p className="mt-8 text-right text-accent animate-fade-in">
+                        Always &amp; Forever Yours
+                      </p>
                     )}
-                  </p>
-                ))}
-                {letterFinished && (
-                  <p className="mt-8 text-right text-[#E5989B] animate-fade-in">
-                    Always &amp; Forever Yours
-                  </p>
-                )}
-              </div>
+                  </div>
+                </>
+              )}
             </div>
 
           </div>

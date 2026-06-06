@@ -1,12 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Heart, LockKey } from "@phosphor-icons/react";
+import { useState, useEffect, useRef, useCallback, type KeyboardEvent } from "react";
+import { HeartIcon, LockKeyIcon } from "@phosphor-icons/react";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 🔐 Ganti PIN_CODE dengan tanggal anniversary kamu, misal "0614" untuk
-//    tanggal 14 Juni. Jangan lupa ubah hint di bawah juga.
-// ─────────────────────────────────────────────────────────────────────────────
+// Ganti PIN_CODE dengan tanggal anniversary kamu, misal "0614" untuk
+// tanggal 14 Juni. Jangan lupa ubah hint di bawah juga.
 const PIN_CODE = "0614";
 const PIN_HINT = "Tanggal pertama kita bertemu 🌸";
 const SESSION_KEY = "ourspace_unlocked";
@@ -34,6 +32,9 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
     inputRefs.current[0]?.focus();
   }, []);
 
+  // Verifikasi PIN — menerima entri PIN dengan PANJANG DIGIT BERAPA PUN.
+  // PIN benar → simpan sesi + unlock. PIN salah (termasuk <4 atau >4 digit)
+  // → umpan balik kesalahan visual + shake lalu reset input (R4.4, R4.5).
   const handleVerify = useCallback((pin: string) => {
     if (pin === PIN_CODE) {
       sessionStorage.setItem(SESSION_KEY, "true");
@@ -82,7 +83,7 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
     }
   };
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Backspace") {
       if (!input[index] && index > 0) {
         // Fokus ke input sebelumnya dan hapus nilainya
@@ -96,36 +97,36 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
     }
   };
 
+  // Upaya verifikasi TIDAK diblokir meskipun entri PIN kurang dari 4 digit (R4.4).
   const handleSubmit = () => {
-    const pin = input.join("");
-    if (pin.length === 4) handleVerify(pin);
+    handleVerify(input.join(""));
   };
 
   return (
     <div className="fixed inset-0 z-60 flex flex-col items-center justify-center bg-[#170E0D]/95 backdrop-blur-md select-none px-4">
 
-      {/* Ambient blobs */}
-      <div className="absolute inset-0 pointer-events-none opacity-20">
-        <div className="absolute top-[10%] left-[15%] w-8 h-8 rounded-full bg-[#FFB7B2] blur-sm animate-pulse-slow" />
-        <div className="absolute bottom-[20%] right-[10%] w-12 h-12 rounded-full bg-[#FFE4E1] blur-md animate-pulse-slow" />
-        <div className="absolute top-[40%] right-[25%] w-6 h-6 rounded-full bg-[#FFC6FF] blur-sm animate-pulse-slow" />
+      {/* Ambient blobs (dekoratif) */}
+      <div className="absolute inset-0 pointer-events-none opacity-20" aria-hidden="true">
+        <div className="absolute top-[10%] left-[15%] w-8 h-8 rounded-full bg-accent blur-sm animate-pulse-slow" />
+        <div className="absolute bottom-[20%] right-[10%] w-12 h-12 rounded-full bg-surface blur-md animate-pulse-slow" />
+        <div className="absolute top-[40%] right-[25%] w-6 h-6 rounded-full bg-accent-strong blur-sm animate-pulse-slow" />
       </div>
 
-      {/* Card */}
-      <div className="relative z-10 w-full max-w-sm">
+      {/* Card — Frosted_Glass + bayangan berlapis (R4.1) */}
+      <div className="relative z-10 w-full max-w-sm glass-surface shadow-elevation-3 rounded-card p-8 sm:p-10">
         {/* Icon */}
         <div className="flex justify-center mb-6">
-          <div className="w-16 h-16 rounded-full bg-[#FFB7B2]/10 border border-[#FFB7B2]/20 flex items-center justify-center">
-            <LockKey size={28} weight="light" className="text-[#FFB7B2]" />
+          <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center">
+            <LockKeyIcon size={28} weight="light" className="text-accent-strong" />
           </div>
         </div>
 
         {/* Heading */}
         <div className="text-center mb-10">
-          <h1 className="font-cursive text-4xl text-[#FFFBF9] mb-2">
+          <h1 className="font-cursive text-4xl text-foreground mb-2">
             Our Private Space
           </h1>
-          <p className="font-mono text-xs tracking-[0.2em] text-[#FFB7B2]/70 uppercase">
+          <p className="font-mono text-xs tracking-[0.2em] text-accent-strong/80 uppercase">
             Masukkan PIN untuk melanjutkan
           </p>
         </div>
@@ -148,12 +149,12 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
               onChange={(e) => handleChange(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(i, e)}
               onFocus={(e) => e.target.select()}
-              className={`w-14 h-14 text-center text-2xl font-mono rounded-xl border-2 bg-[#FFFBF9]/5 text-[#FFFBF9] outline-none transition-all duration-200 caret-transparent
+              className={`focus-ring w-14 h-14 text-center text-2xl font-mono rounded-inner border-2 bg-surface/40 text-foreground outline-none transition-spring transition-all duration-200 caret-transparent
                 ${error
-                  ? "border-[#FF6B6B] bg-[#FF6B6B]/10"
+                  ? "border-accent-strong bg-accent-strong/10"
                   : digit
-                    ? "border-[#FFB7B2] bg-[#FFB7B2]/10"
-                    : "border-[#FFFBF9]/20 focus:border-[#FFB7B2]/60"
+                    ? "border-accent bg-accent/10"
+                    : "border-foreground/20 focus:border-accent"
                 }`}
               aria-label={`Digit PIN ke-${i + 1}`}
             />
@@ -163,7 +164,7 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
         {/* Error message */}
         <div className="h-5 text-center mb-6">
           {error && (
-            <p className="font-mono text-xs text-[#FF6B6B] tracking-wider animate-fade-in">
+            <p className="font-mono text-xs text-accent-strong tracking-wider animate-fade-in">
               PIN salah. Coba lagi 💔
             </p>
           )}
@@ -172,10 +173,9 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
         {/* Submit button */}
         <button
           onClick={handleSubmit}
-          disabled={input.join("").length !== 4}
-          className="w-full py-3 rounded-full bg-[#E5989B] hover:bg-[#B56576] disabled:opacity-30 disabled:cursor-not-allowed text-white font-mono text-xs font-medium tracking-wider shadow-md active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
+          className="focus-ring w-full py-3 rounded-pill bg-accent hover:bg-accent-strong text-white font-mono text-xs font-medium tracking-wider shadow-elevation-1 active:scale-95 transition-spring transition-all duration-300 flex items-center justify-center gap-2"
         >
-          <Heart size={14} weight="fill" />
+          <HeartIcon size={14} weight="fill" />
           BUKA KENANGAN KITA
         </button>
 
@@ -183,12 +183,12 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
         <div className="text-center mt-6">
           <button
             onClick={() => setShowHint(!showHint)}
-            className="font-mono text-[10px] tracking-wider text-[#FFFBF9]/30 hover:text-[#FFB7B2]/60 transition-colors uppercase"
+            className="focus-ring font-mono text-[10px] tracking-wider text-foreground/40 hover:text-accent-strong transition-spring transition-colors uppercase"
           >
             {showHint ? "Sembunyikan hint" : "Butuh petunjuk?"}
           </button>
           {showHint && (
-            <p className="mt-2 font-cursive text-xl text-[#FFB7B2]/60 italic">
+            <p className="mt-2 font-cursive text-xl text-accent-strong/80 italic">
               {PIN_HINT}
             </p>
           )}
