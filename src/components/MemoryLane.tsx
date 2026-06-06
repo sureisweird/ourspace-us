@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { HeartIcon, XIcon } from "@phosphor-icons/react";
+import PolaroidCard from "./PolaroidCard";
 
 interface PolaroidItem {
   id: number;
@@ -179,51 +180,18 @@ export default function MemoryLane() {
         style={{ perspective: 1000 }}
       >
         {MEMORIES.map((memory) => (
-          <div
+          <PolaroidCard
             key={memory.id}
-            onClick={() => setSelected(memory)}
-            role="button"
-            tabIndex={0}
-            aria-label={`Buka foto: ${memory.caption}`}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                setSelected(memory);
-              }
-            }}
-            className={`polaroid-card focus-ring bg-surface p-4 pb-6 rounded-card shadow-elevation-2 border border-accent/20 flex flex-col justify-between h-fit cursor-pointer transition-spring duration-500 ${memory.colSpanClass} ${memory.offsetClass}`}
+            id={memory.id}
+            localUrl={memory.localUrl}
+            fallbackUrl={memory.fallbackUrl}
+            caption={memory.caption}
+            date={memory.date}
+            className={`${memory.colSpanClass} ${memory.offsetClass}`}
             style={{ transformStyle: "preserve-3d" }}
-          >
-            <div className="relative aspect-4/3 w-full overflow-hidden bg-background rounded-inner mb-4 border border-accent/15">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={memory.localUrl}
-                alt={memory.caption}
-                loading="lazy"
-                className="w-full h-full object-cover transition-all duration-500 filter-[grayscale(15%)] hover:filter-[grayscale(0%)]"
-                onError={(e) => {
-                  const img = e.currentTarget;
-                  if (img.src !== memory.fallbackUrl) {
-                    img.src = memory.fallbackUrl;
-                  }
-                }}
-              />
-            </div>
-
-            <div className="px-1 flex flex-col gap-2">
-              <p className="font-cursive text-2xl text-foreground/90 leading-tight">
-                {memory.caption}
-              </p>
-              <div className="flex justify-between items-center border-t border-accent/20 pt-2">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-foreground/60">
-                  {memory.date}
-                </span>
-                <span className="font-mono text-[9px] text-foreground/40 uppercase tracking-widest">
-                  No. 00{memory.id}
-                </span>
-              </div>
-            </div>
-          </div>
+            onClick={() => setSelected(memory)}
+            variant="gallery"
+          />
         ))}
       </div>
 
