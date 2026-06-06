@@ -2,7 +2,11 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
 import { Play, Pause, CaretRight, CaretLeft, Heart, MusicNote } from "@phosphor-icons/react";
+
+gsap.registerPlugin(ScrollTrigger);
 
 //  CARA MENGGUNAKAN AUDIO NYATA:
 //   1. Taruh file lagu di folder: /public/music/our-song.mp3
@@ -17,6 +21,45 @@ const SONG_META = {
   album: "Life Together",
 };
 
+// Isi surat. Diketik karakter-demi-karakter agar terasa seperti ditulis tangan.
+const LETTER_PARAGRAPHS = [
+  "From the very first moment we met, I felt the gravity of a beautiful, unwritten story beginning. Every day with you has been an adventure, a sanctuary, and the sweetest rhythm.",
+  "We have built our own quiet language, grown roots deep into the earth, and faced every season hand-in-hand. You are my home, my peace, and my absolute greatest gift.",
+  "Here is to every sunset we've watched, every cup of coffee shared, and the infinite chapters that still wait for us ahead. Happy Anniversary.",
+];
+const LETTER_TEXT = LETTER_PARAGRAPHS.join("\n\n");
+
+// Equalizer mini untuk layar iPod. Tiap bar punya durasi & delay berbeda agar
+// gerakannya terasa acak/natural. Mewarisi warna teks lewat `bg-current`.
+const EQ_BARS = [
+  { dur: 0.7, delay: 0 },
+  { dur: 0.95, delay: 0.18 },
+  { dur: 0.6, delay: 0.32 },
+  { dur: 0.85, delay: 0.1 },
+  { dur: 1.05, delay: 0.24 },
+];
+
+function Equalizer({ playing }: { playing: boolean }) {
+  return (
+    <span className="inline-flex items-end gap-[2px] h-2.5 align-middle" aria-hidden="true">
+      {EQ_BARS.map((bar, i) => (
+        <span
+          key={i}
+          className="w-[2px] bg-current rounded-full"
+          style={{
+            height: "100%",
+            transformOrigin: "bottom",
+            transform: playing ? undefined : "scaleY(0.3)",
+            animation: playing
+              ? `eq-bounce ${bar.dur}s ease-in-out ${bar.delay}s infinite`
+              : "none",
+          }}
+        />
+      ))}
+    </span>
+  );
+}
+
 interface RetroIpodFooterProps {
   audioRef: React.RefObject<HTMLAudioElement | null>;
 }
@@ -28,12 +71,52 @@ export default function RetroIpodFooter({ audioRef }: RetroIpodFooterProps) {
   // audioAvailable: false jika file tidak ditemukan, supaya UI tetap bisa dipakai
   const [audioAvailable, setAudioAvailable] = useState(true);
 
+  // Efek "menulis" surat: mulai saat surat masuk viewport, lalu ketik per karakter.
+  const [letterStarted, setLetterStarted] = useState(false);
+  const [typedCount, setTypedCount] = useState(0);
+  const [reducedMotion] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+
   const vinylRef = useRef<HTMLDivElement>(null);
   const rotateTween = useRef<gsap.core.Tween | null>(null);
+  const letterRef = useRef<HTMLDivElement>(null);
 
   // FIX #2: progress diturunkan langsung dari currentTime & duration audio,
   // bukan dari interval terpisah yang tidak sinkron.
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  // Mulai efek mengetik saat surat masuk viewport (sekali saja).
+  useGSAP(
+    () => {
+      if (reducedMotion) return;
+      ScrollTrigger.create({
+        trigger: letterRef.current,
+        start: "top 78%",
+        once: true,
+        onEnter: () => setLetterStarted(true),
+      });
+    },
+    { scope: letterRef }
+  );
+
+  // Ketik karakter demi karakter dengan jeda lebih panjang di tanda baca / antar
+  // paragraf agar ritmenya terasa seperti orang menulis.
+  useEffect(() => {
+    if (reducedMotion || !letterStarted || typedCount >= LETTER_TEXT.length) return;
+
+    const prev = LETTER_TEXT[typedCount - 1] ?? "";
+    const curr = LETTER_TEXT[typedCount];
+    let delay = 26;
+    if (curr === " ") delay = 42;
+    if (curr === "\n") delay = 110;
+    if (".,;!?".includes(prev)) delay = 280;
+
+    const timer = setTimeout(() => setTypedCount((n) => n + 1), delay);
+    return () => clearTimeout(timer);
+  }, [letterStarted, typedCount, reducedMotion]);
 
   //  Vinyl rotation GSAP 
   useEffect(() => {
@@ -192,6 +275,12 @@ export default function RetroIpodFooter({ audioRef }: RetroIpodFooterProps) {
     setCurrentTime(newTime);
   };
 
+  // Teks surat yang sudah "tertulis" sejauh ini.
+  const letterVisible = reducedMotion ? LETTER_TEXT : LETTER_TEXT.slice(0, typedCount);
+  const letterParas = letterVisible.split("\n\n");
+  const letterTyping = letterStarted && !reducedMotion && typedCount < LETTER_TEXT.length;
+  const letterFinished = reducedMotion || typedCount >= LETTER_TEXT.length;
+
   return (
     <footer
       id="letter"
@@ -218,8 +307,15 @@ export default function RetroIpodFooter({ audioRef }: RetroIpodFooterProps) {
                   <MusicNote size={10} weight="fill" />
                   {audioAvailable ? "Playing" : "No Audio"}
                 </span>
-                <span className="flex items-center gap-1 font-semibold">
-                  {isPlaying ? "▶ |||" : "PAUSED"}
+                <span className="flex items-center gap-1.5 font-semibold">
+                  {isPlaying ? (
+                    <>
+                      <Equalizer playing={!reducedMotion} />
+                      <span>PLAYING</span>
+                    </>
+                  ) : (
+                    "PAUSED"
+                  )}
                 </span>
               </div>
 
@@ -338,7 +434,7 @@ export default function RetroIpodFooter({ audioRef }: RetroIpodFooterProps) {
         {/* Right Column - Love Letter */}
         <div className="lg:col-span-7 flex flex-col justify-center">
 
-          <div className="bg-[#FFFDF9] border border-[#F2E5E3] p-8 md:p-12 rounded-4xl shadow-xl relative overflow-hidden max-w-xl mx-auto lg:mx-0 filter drop-shadow-[0_10px_25px_rgba(42,31,29,0.05)]">
+          <div ref={letterRef} className="bg-[#FFFDF9] border border-[#F2E5E3] p-8 md:p-12 rounded-4xl shadow-xl relative overflow-hidden max-w-xl mx-auto lg:mx-0 filter drop-shadow-[0_10px_25px_rgba(42,31,29,0.05)]">
 
             {/* Lined stationery paper effect */}
             <div
@@ -367,20 +463,33 @@ export default function RetroIpodFooter({ audioRef }: RetroIpodFooterProps) {
               </h3>
             </div>
 
-            {/* Letter Body */}
-            <div className="font-cursive text-2xl md:text-3xl text-[#2A1F1D]/85 leading-8 relative z-10 flex flex-col gap-6 pl-2">
-              <p>
-                From the very first moment we met, I felt the gravity of a beautiful, unwritten story beginning. Every day with you has been an adventure, a sanctuary, and the sweetest rhythm.
-              </p>
-              <p>
-                We have built our own quiet language, grown roots deep into the earth, and faced every season hand-in-hand. You are my home, my peace, and my absolute greatest gift.
-              </p>
-              <p>
-                Here is to every sunset we&apos;ve watched, every cup of coffee shared, and the infinite chapters that still wait for us ahead. Happy Anniversary.
-              </p>
-              <p className="mt-8 text-right text-[#E5989B]">
-                Always &amp; Forever Yours
-              </p>
+            {/* Letter Body — diketik seperti tulisan tangan.
+                Lapisan "ghost" (invisible) mereservasi tinggi final agar tidak
+                ada layout shift saat teks bertambah; teks yang terlihat
+                ditumpuk di atasnya secara absolute. */}
+            <div className="font-cursive text-2xl md:text-3xl text-[#2A1F1D]/85 leading-8 relative z-10">
+              <div aria-hidden="true" className="invisible flex flex-col gap-6 pl-2">
+                {LETTER_PARAGRAPHS.map((para, i) => (
+                  <p key={i}>{para}</p>
+                ))}
+                <p className="mt-8 text-right">Always &amp; Forever Yours</p>
+              </div>
+
+              <div className="absolute inset-0 flex flex-col gap-6 pl-2">
+                {letterParas.map((para, i) => (
+                  <p key={i}>
+                    {para}
+                    {letterTyping && i === letterParas.length - 1 && (
+                      <span className="inline-block w-[2px] h-[1em] align-middle bg-[#E5989B] ml-0.5 animate-blink" />
+                    )}
+                  </p>
+                ))}
+                {letterFinished && (
+                  <p className="mt-8 text-right text-[#E5989B] animate-fade-in">
+                    Always &amp; Forever Yours
+                  </p>
+                )}
+              </div>
             </div>
 
           </div>
