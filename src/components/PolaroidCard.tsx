@@ -13,37 +13,92 @@ interface PolaroidCardProps {
   variant?: "gallery" | "hero";
 }
 
-const getSticker = (id?: number) => {
-  if (!id) return null;
+interface StickerItem {
+  src: string;
+  className: string;
+}
+
+const getStickers = (id?: number): StickerItem[] => {
+  if (!id) return [];
   const mod = id % 5;
   if (mod === 1) {
-    return {
-      src: "/assets/hibiscus_flower/leaf_2.svg",
-      className: "absolute -top-3 -right-3 w-10 h-auto rotate-45 opacity-90 z-20 pointer-events-none animate-sway",
-    };
+    return [
+      {
+        src: "/assets/hibiscus_flower/leaf_2.svg",
+        className: "absolute -top-4 -right-4 w-12 h-auto rotate-45 opacity-90 z-20 pointer-events-none animate-sway",
+      },
+      {
+        src: "/assets/hibiscus_flower/flower_medium_3.svg",
+        className: "absolute -top-6 right-2 w-8 h-auto -rotate-12 opacity-95 z-20 pointer-events-none animate-pulse-slow [animation-delay:0.5s]",
+      },
+      {
+        src: "/assets/hibiscus_flower/petal_2.svg",
+        className: "absolute bottom-2 right-2 w-5 h-auto rotate-45 opacity-75 z-20 pointer-events-none animate-sway",
+      }
+    ];
   }
   if (mod === 2) {
-    return {
-      src: "/assets/hibiscus_flower/flower_medium_3.svg",
-      className: "absolute -bottom-4 -left-4 w-12 h-auto -rotate-12 opacity-95 z-20 pointer-events-none animate-pulse-slow",
-    };
+    return [
+      {
+        src: "/assets/hibiscus_flower/leaf_3.svg",
+        className: "absolute -bottom-2 -left-6 w-9 h-auto rotate-45 opacity-80 z-10 pointer-events-none animate-sway",
+      },
+      {
+        src: "/assets/hibiscus_flower/flower_medium_3.svg",
+        className: "absolute -bottom-5 -left-4 w-12 h-auto -rotate-12 opacity-95 z-20 pointer-events-none animate-pulse-slow",
+      },
+      {
+        src: "/assets/hibiscus_flower/petal_5.svg",
+        className: "absolute bottom-6 left-2 w-5 h-auto -rotate-12 opacity-75 z-20 pointer-events-none animate-pulse-slow",
+      }
+    ];
   }
   if (mod === 3) {
-    return {
-      src: "/assets/hibiscus_flower/petal_3.svg",
-      className: "absolute -top-2 -left-2 w-8 h-auto rotate-12 opacity-85 z-20 pointer-events-none animate-sway [animation-delay:0.5s]",
-    };
+    return [
+      {
+        src: "/assets/hibiscus_flower/petal_3.svg",
+        className: "absolute -top-3 -left-3 w-10 h-auto rotate-12 opacity-85 z-20 pointer-events-none animate-sway [animation-delay:0.5s]",
+      },
+      {
+        src: "/assets/hibiscus_flower/petal_1.svg",
+        className: "absolute -top-5 left-3 w-7 h-auto -rotate-45 opacity-90 z-20 pointer-events-none animate-sway [animation-delay:1.2s]",
+      },
+      {
+        src: "/assets/hibiscus_flower/petal_4.svg",
+        className: "absolute bottom-3 right-4 w-4 h-auto rotate-45 opacity-75 z-20 pointer-events-none animate-sway",
+      }
+    ];
   }
   if (mod === 4) {
-    return {
-      src: "/assets/hibiscus_flower/leaf_3.svg",
-      className: "absolute -bottom-3 -right-3 w-10 h-auto -rotate-45 opacity-90 z-20 pointer-events-none animate-sway [animation-delay:1s]",
-    };
+    return [
+      {
+        src: "/assets/hibiscus_flower/leaf_3.svg",
+        className: "absolute -bottom-3 -right-3 w-11 h-auto -rotate-45 opacity-90 z-20 pointer-events-none animate-sway [animation-delay:1s]",
+      },
+      {
+        src: "/assets/hibiscus_flower/flower_medium_1.svg",
+        className: "absolute -bottom-6 right-3 w-9 h-auto rotate-12 opacity-95 z-20 pointer-events-none animate-pulse-slow",
+      },
+      {
+        src: "/assets/hibiscus_flower/petal_5.svg",
+        className: "absolute bottom-6 left-2 w-5 h-auto -rotate-12 opacity-75 z-20 pointer-events-none animate-pulse-slow",
+      }
+    ];
   }
-  return {
-    src: "/assets/hibiscus_flower/flower_medium_2.svg",
-    className: "absolute -top-4 -right-4 w-11 h-auto rotate-[30deg] opacity-95 z-20 pointer-events-none animate-pulse-slow",
-  };
+  return [
+    {
+      src: "/assets/hibiscus_flower/leaf_1.svg",
+      className: "absolute -top-6 right-2 w-9 h-auto -rotate-12 opacity-80 z-10 pointer-events-none animate-sway",
+    },
+    {
+      src: "/assets/hibiscus_flower/flower_medium_2.svg",
+      className: "absolute -top-4 -right-4 w-12 h-auto rotate-[30deg] opacity-95 z-20 pointer-events-none animate-pulse-slow",
+    },
+    {
+      src: "/assets/hibiscus_flower/petal_2.svg",
+      className: "absolute bottom-2 right-2 w-5 h-auto rotate-45 opacity-75 z-20 pointer-events-none animate-sway",
+    }
+  ];
 };
 
 const PolaroidCard = forwardRef<HTMLDivElement, PolaroidCardProps>(
@@ -78,7 +133,7 @@ const PolaroidCard = forwardRef<HTMLDivElement, PolaroidCardProps>(
       }
     };
 
-    const sticker = getSticker(id);
+    const stickers = getStickers(id);
 
     return (
       <div
@@ -92,15 +147,16 @@ const PolaroidCard = forwardRef<HTMLDivElement, PolaroidCardProps>(
         aria-label={onClick ? `Buka foto: ${caption}` : undefined}
       >
         {/* Stiker bunga/daun hiasan (dekoratif, pointer-events-none) */}
-        {!isHero && sticker && (
+        {!isHero && stickers.map((sticker, index) => (
           // eslint-disable-next-line @next/next/no-img-element
           <img
+            key={index}
             src={sticker.src}
             alt=""
             className={sticker.className}
             aria-hidden="true"
           />
-        )}
+        ))}
         {/* Gambar Polaroid (sudut siku tajam khas polaroid) */}
         <div className={`relative ${aspectRatioClass} w-full overflow-hidden bg-background rounded-none mb-4 border border-accent/15`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
