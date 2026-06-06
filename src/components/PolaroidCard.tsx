@@ -13,6 +13,39 @@ interface PolaroidCardProps {
   variant?: "gallery" | "hero";
 }
 
+const getSticker = (id?: number) => {
+  if (!id) return null;
+  const mod = id % 5;
+  if (mod === 1) {
+    return {
+      src: "/assets/hibiscus_flower/leaf_2.svg",
+      className: "absolute -top-3 -right-3 w-10 h-auto rotate-45 opacity-90 z-20 pointer-events-none animate-sway",
+    };
+  }
+  if (mod === 2) {
+    return {
+      src: "/assets/hibiscus_flower/flower_medium_3.svg",
+      className: "absolute -bottom-4 -left-4 w-12 h-auto -rotate-12 opacity-95 z-20 pointer-events-none animate-pulse-slow",
+    };
+  }
+  if (mod === 3) {
+    return {
+      src: "/assets/hibiscus_flower/petal_3.svg",
+      className: "absolute -top-2 -left-2 w-8 h-auto rotate-12 opacity-85 z-20 pointer-events-none animate-sway [animation-delay:0.5s]",
+    };
+  }
+  if (mod === 4) {
+    return {
+      src: "/assets/hibiscus_flower/leaf_3.svg",
+      className: "absolute -bottom-3 -right-3 w-10 h-auto -rotate-45 opacity-90 z-20 pointer-events-none animate-sway [animation-delay:1s]",
+    };
+  }
+  return {
+    src: "/assets/hibiscus_flower/flower_medium_2.svg",
+    className: "absolute -top-4 -right-4 w-11 h-auto rotate-[30deg] opacity-95 z-20 pointer-events-none animate-pulse-slow",
+  };
+};
+
 const PolaroidCard = forwardRef<HTMLDivElement, PolaroidCardProps>(
   (
     {
@@ -33,7 +66,7 @@ const PolaroidCard = forwardRef<HTMLDivElement, PolaroidCardProps>(
     const paddingClass = isHero ? "p-4 pb-8" : "p-4 pb-6";
 
     // Gabungkan kelas dasar polaroid card (sudut tajam/rounded-sm khas polaroid fisik)
-    const cardClasses = `polaroid-card bg-surface border border-accent/20 flex flex-col justify-between h-fit transition-spring duration-500 shadow-elevation-2 rounded-[2px] ${
+    const cardClasses = `polaroid-card relative bg-surface border border-accent/20 flex flex-col justify-between h-fit transition-spring duration-500 shadow-elevation-2 rounded-[2px] ${
       onClick ? "focus-ring cursor-pointer" : ""
     } ${paddingClass} ${className}`;
 
@@ -44,6 +77,8 @@ const PolaroidCard = forwardRef<HTMLDivElement, PolaroidCardProps>(
         onClick();
       }
     };
+
+    const sticker = getSticker(id);
 
     return (
       <div
@@ -56,6 +91,16 @@ const PolaroidCard = forwardRef<HTMLDivElement, PolaroidCardProps>(
         role={onClick ? "button" : undefined}
         aria-label={onClick ? `Buka foto: ${caption}` : undefined}
       >
+        {/* Stiker bunga/daun hiasan (dekoratif, pointer-events-none) */}
+        {!isHero && sticker && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={sticker.src}
+            alt=""
+            className={sticker.className}
+            aria-hidden="true"
+          />
+        )}
         {/* Gambar Polaroid (sudut siku tajam khas polaroid) */}
         <div className={`relative ${aspectRatioClass} w-full overflow-hidden bg-background rounded-none mb-4 border border-accent/15`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
