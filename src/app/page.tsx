@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import { HeartIcon, SparkleIcon, CalendarIcon } from "@phosphor-icons/react";
+import { SparkleIcon, CalendarIcon } from "@phosphor-icons/react";
 
 import PinGate from "@/components/PinGate";
 import GiftBoxHero from "@/components/GiftBoxHero";
@@ -119,7 +119,13 @@ export default function Home() {
           >
             <div className="h-20 w-full px-6 md:px-12 flex items-center justify-between max-w-7xl mx-auto">
               <div className="flex items-center gap-2">
-                <HeartIcon size={20} weight="fill" className="text-accent" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/assets/hibiscus_flower/flower_big_1.svg"
+                  alt=""
+                  className="w-5 h-5 object-contain"
+                  aria-hidden="true"
+                />
                 <span className="font-sans font-light text-sm tracking-[0.2em] uppercase text-foreground">
                   OUR SPACE
                 </span>
