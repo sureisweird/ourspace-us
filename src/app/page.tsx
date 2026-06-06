@@ -85,10 +85,10 @@ export default function Home() {
             <div className="absolute animate-leaf bg-accent/10 rounded-full" style={{ left: "25%", width: "22px", height: "20px", animationDelay: "10s", animationDuration: "22s" }} />
           </div>
 
-          {/* Navigation Header — sticky frosted glass (z within main range 10–40) */}
+          {/* Navigation Header — absolute transparent */}
           <header
             ref={headerRef}
-            className="glass-surface sticky top-0 z-40 w-full"
+            className="absolute top-0 left-0 z-40 w-full bg-transparent"
           >
             <div className="h-20 w-full px-6 md:px-12 flex items-center justify-between max-w-7xl mx-auto">
               <div className="flex items-center gap-2">
@@ -129,38 +129,40 @@ export default function Home() {
           {/* Main Content */}
           <main ref={mainContentRef} className="relative z-10">
             {/* Hero Intro */}
-            <section className="pt-section pb-section px-6 max-w-5xl mx-auto text-center relative overflow-hidden">
+            <section className="w-full h-dvh min-h-[550px] flex flex-col justify-center items-center px-6 md:px-12 relative overflow-hidden">
               <FloralDecor />
 
               <div
-                className="absolute -top-8 left-1/2 -translate-x-1/2 text-accent/40 animate-pulse-slow z-10 pointer-events-none"
+                className="absolute top-12 left-1/2 -translate-x-1/2 text-accent/40 animate-pulse-slow z-10 pointer-events-none"
                 aria-hidden="true"
               >
                 <SparkleIcon size={32} weight="fill" />
               </div>
 
-              <h1 className="relative z-10 text-display font-sans font-bold tracking-tight text-balance text-foreground mb-block max-w-4xl mx-auto">
-                Celebrating our beautiful <br />
-                <span className="font-cursive font-normal text-6xl md:text-8xl text-accent">odyssey of love</span>.
-              </h1>
+              <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
+                <h1 className="text-display font-sans font-bold tracking-tight text-balance text-foreground mb-block">
+                  Celebrating our beautiful <br />
+                  <span className="font-cursive font-normal text-6xl md:text-8xl text-accent">odyssey of love</span>.
+                </h1>
 
-              <p className="relative z-10 text-body text-foreground/75 max-w-[60ch] mx-auto font-light mb-block">
-                A digital garden containing the milestones, memories, and songs that have woven our hearts together. Welcome to our space.
-              </p>
+                <p className="text-body text-foreground/75 max-w-[60ch] mx-auto font-light mb-block">
+                  A digital garden containing the milestones, memories, and songs that have woven our hearts together. Welcome to our space.
+                </p>
 
-              <div className="relative z-10 flex flex-wrap justify-center gap-4">
-                <a
-                  href="#memories"
-                  className="focus-ring rounded-pill bg-accent hover:bg-accent-strong text-surface font-mono text-xs font-medium tracking-wider px-8 py-3.5 shadow-elevation-1 hover:shadow-elevation-2 transition-all duration-300 ease-spring hover:-translate-y-0.5 active:scale-95"
-                >
-                  EXPLORE ARCHIVES
-                </a>
-                <a
-                  href="#letter"
-                  className="focus-ring rounded-pill border border-accent/30 hover:border-accent bg-surface/80 text-foreground/80 hover:text-foreground font-mono text-xs font-medium tracking-wider px-8 py-3.5 shadow-elevation-1 hover:shadow-elevation-2 transition-all duration-300 ease-spring hover:-translate-y-0.5 active:scale-95"
-                >
-                  READ LETTER
-                </a>
+                <div className="flex flex-wrap justify-center gap-4">
+                  <a
+                    href="#memories"
+                    className="focus-ring rounded-pill bg-accent hover:bg-accent-strong text-surface font-mono text-xs font-medium tracking-wider px-8 py-3.5 shadow-elevation-1 hover:shadow-elevation-2 transition-all duration-300 ease-spring hover:-translate-y-0.5 active:scale-95"
+                  >
+                    EXPLORE ARCHIVES
+                  </a>
+                  <a
+                    href="#letter"
+                    className="focus-ring rounded-pill border border-accent/30 hover:border-accent bg-surface/80 text-foreground/80 hover:text-foreground font-mono text-xs font-medium tracking-wider px-8 py-3.5 shadow-elevation-1 hover:shadow-elevation-2 transition-all duration-300 ease-spring hover:-translate-y-0.5 active:scale-95"
+                  >
+                    READ LETTER
+                  </a>
+                </div>
               </div>
             </section>
 
