@@ -112,8 +112,7 @@
 
 html {
   scroll-behavior: smooth;
-  overflow-x: hidden;
-  max-width: 100vw;
+  max-width: 100%;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
 }
@@ -126,8 +125,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
-  overflow-x: hidden;
-  max-width: 100vw;
+  max-width: 100%;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
 }
@@ -275,6 +273,6 @@ body::after {
 
   /* Catatan: rotasi vinyl dijalankan via GSAP (transform inline), sehingga
      dihentikan di tingkat komponen lewat pemeriksaan prefers-reduced-motion
-     (pola `reducedMotion` di RetroIpodFooter). CSS di sini menjamin seluruh
+     (pola `reducedMotion` di MusicLetterFooter). CSS di sini menjamin seluruh
      animasi ambient berbasis CSS/keyframe ikut dinonaktifkan. */
 }
