@@ -31,7 +31,12 @@ function DecorImage({
       draggable={false}
       onError={() => setFailed(true)}
       className={className}
-      style={style}
+      style={{
+        willChange: "transform",
+        backfaceVisibility: "hidden",
+        WebkitBackfaceVisibility: "hidden",
+        ...style,
+      }}
     />
   );
 }
@@ -44,7 +49,7 @@ function DecorImage({
  */
 function CornerSpray({ className }: { className?: string }) {
   return (
-    <div className={`relative aspect-[5/6] ${className ?? ""}`}>
+    <div className={`relative aspect-5/6 ${className ?? ""}`}>
       {/* Tint/glow lembut di sekitar aset memakai Token_Desain (R13.9) */}
       <div
         className="absolute left-[18%] top-[34%] h-3/5 w-3/5 rounded-full bg-accent opacity-20 blur-2xl"
@@ -54,15 +59,15 @@ function CornerSpray({ className }: { className?: string }) {
       {/* Dedaunan dasar */}
       <DecorImage
         name="leaf_2.svg"
-        className="absolute bottom-0 left-[2%] w-[58%] origin-bottom-left -rotate-[18deg]"
+        className="absolute bottom-0 left-[2%] w-[58%] origin-bottom-left rotate-[-18deg]"
       />
       <DecorImage
         name="leaf_1.svg"
-        className="absolute bottom-[14%] left-[30%] w-[52%] origin-bottom -rotate-[2deg] opacity-95"
+        className="absolute bottom-[14%] left-[30%] w-[52%] origin-bottom -rotate-2 opacity-95"
       />
       <DecorImage
         name="leaf_3.svg"
-        className="absolute bottom-[6%] left-[42%] w-[46%] origin-bottom-right rotate-[24deg] opacity-90"
+        className="absolute bottom-[6%] left-[42%] w-[46%] origin-bottom-right rotate-24 opacity-90"
       />
 
       {/* Bunga utama */}
@@ -78,7 +83,7 @@ function CornerSpray({ className }: { className?: string }) {
       {/* Kuncup/aksen kelopak */}
       <DecorImage
         name="petal_3.svg"
-        className="absolute bottom-[10%] left-[24%] w-[20%] rotate-[12deg] opacity-85"
+        className="absolute bottom-[10%] left-[24%] w-[20%] rotate-12 opacity-85"
       />
     </div>
   );
@@ -91,6 +96,16 @@ export default function FloralDecor() {
       style={{ zIndex: 0 }}
       aria-hidden="true"
     >
+      {/* Sudut kiri atas (hanging down) */}
+      <div className="absolute -top-12 -left-6 w-32 rotate-110 scale-y-[-1] opacity-90 md:w-44">
+        <CornerSpray className="w-full animate-sway [animation-delay:0.7s]" />
+      </div>
+
+      {/* Sudut kanan atas (hanging down - mirrored) */}
+      <div className="absolute -top-12 -right-6 w-32 scale-x-[-1] rotate-110 scale-y-[-1] opacity-90 md:w-44">
+        <CornerSpray className="w-full animate-sway [animation-delay:2.1s]" />
+      </div>
+
       {/* Sudut kiri bawah */}
       <div className="absolute -bottom-10 -left-4 w-40 md:w-56">
         <CornerSpray className="w-full animate-sway" />
@@ -104,15 +119,15 @@ export default function FloralDecor() {
       {/* Aksen bunga kecil melayang */}
       <DecorImage
         name="flower_medium_3.svg"
-        className="absolute left-6 top-2 w-9 opacity-80 animate-pulse-slow md:w-12"
+        className="absolute left-[8%] top-[15%] w-9 opacity-80 animate-pulse-slow md:w-12"
       />
       <DecorImage
         name="petal_1.svg"
-        className="absolute right-10 top-6 w-7 opacity-70 animate-pulse-slow [animation-delay:2s] md:w-10"
+        className="absolute right-[12%] top-[18%] w-7 opacity-70 animate-pulse-slow [animation-delay:2s] md:w-10"
       />
       <DecorImage
         name="petal_5.svg"
-        className="absolute bottom-10 left-1/4 w-6 opacity-60 animate-pulse-slow [animation-delay:3.5s] md:w-8"
+        className="absolute bottom-[20%] left-1/4 w-6 opacity-60 animate-pulse-slow [animation-delay:3.5s] md:w-8"
       />
     </div>
   );
