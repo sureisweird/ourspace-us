@@ -11,6 +11,7 @@ import GiftBoxHero from "@/components/GiftBoxHero";
 import MemoryLane from "@/components/MemoryLane";
 import SplitContent from "@/components/SplitContent";
 import RetroIpodFooter, { SONG_SRC } from "@/components/RetroIpodFooter";
+import FloralDecor from "@/components/FloralDecor";
 
 // FIX #6: Urutan akses:
 //   1. PinGate  → user memasukkan PIN
@@ -118,20 +119,22 @@ export default function Home() {
           <main ref={mainContentRef} className="relative z-10">
             {/* Hero Intro */}
             <section className="pt-16 pb-24 px-6 max-w-5xl mx-auto text-center relative">
-              <div className="absolute -top-12 left-1/2 -translate-x-1/2 text-[#FFB7B2]/40 animate-pulse">
+              <FloralDecor />
+
+              <div className="absolute -top-12 left-1/2 -translate-x-1/2 text-[#FFB7B2]/40 animate-pulse z-10">
                 <Sparkle size={32} weight="fill" />
               </div>
 
-              <h1 className="text-5xl md:text-7xl font-sans tracking-tight leading-[1.1] font-light text-[#2A1F1D] mb-8 max-w-4xl mx-auto">
+              <h1 className="relative z-10 text-5xl md:text-7xl font-sans tracking-tight leading-[1.1] font-light text-[#2A1F1D] mb-8 max-w-4xl mx-auto">
                 Celebrating our beautiful <br />
                 <span className="font-cursive text-6xl md:text-8xl text-[#E5989B]">odyssey of love</span>.
               </h1>
 
-              <p className="text-[#2A1F1D]/75 text-base md:text-lg leading-relaxed max-w-[60ch] mx-auto font-light mb-12">
+              <p className="relative z-10 text-[#2A1F1D]/75 text-base md:text-lg leading-relaxed max-w-[60ch] mx-auto font-light mb-12">
                 A digital garden containing the milestones, memories, and songs that have woven our hearts together. Welcome to our space.
               </p>
 
-              <div className="flex justify-center gap-6">
+              <div className="relative z-10 flex justify-center gap-6">
                 <a
                   href="#memories"
                   className="px-6 py-3 rounded-full bg-[#E5989B] hover:bg-[#B56576] text-white font-mono text-xs font-medium tracking-wider shadow-md active:scale-95 transition-all duration-300"
