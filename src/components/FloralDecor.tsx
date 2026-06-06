@@ -107,12 +107,12 @@ export default function FloralDecor() {
       </div>
 
       {/* Sudut kiri bawah */}
-      <div className="absolute -bottom-10 -left-4 w-40 md:w-56">
+      <div className="absolute bottom-0 -left-4 w-40 md:w-56">
         <CornerSpray className="w-full animate-sway" />
       </div>
 
       {/* Sudut kanan bawah (mirror) */}
-      <div className="absolute -bottom-10 -right-4 w-40 scale-x-[-1] md:w-56">
+      <div className="absolute bottom-0 -right-4 w-40 scale-x-[-1] md:w-56">
         <CornerSpray className="w-full animate-sway [animation-delay:1.3s]" />
       </div>
 
