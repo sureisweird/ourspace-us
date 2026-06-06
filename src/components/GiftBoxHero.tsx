@@ -48,10 +48,17 @@ interface PetalParticle {
 
 interface GiftBoxHeroProps {
   onOpenComplete: () => void;
+  onTransitionComplete?: () => void;
+  isTransitioning?: boolean;
   audioRef: React.RefObject<HTMLAudioElement | null>;
 }
 
-export default function GiftBoxHero({ onOpenComplete, audioRef }: GiftBoxHeroProps) {
+export default function GiftBoxHero({
+  onOpenComplete,
+  onTransitionComplete,
+  isTransitioning = false,
+  audioRef,
+}: GiftBoxHeroProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const boxWrapperRef = useRef<HTMLDivElement>(null);
   const lidRef = useRef<SVGGElement>(null);
@@ -231,10 +238,62 @@ export default function GiftBoxHero({ onOpenComplete, audioRef }: GiftBoxHeroPro
     { scope: containerRef, dependencies: [isClicked, petals] }
   );
 
+  // Exit transition (Scatter to left and right)
+  useGSAP(
+    () => {
+      if (!isTransitioning) return;
+
+      const exitTl = gsap.timeline({
+        onComplete: onTransitionComplete,
+      });
+
+      // 1. Scatter wash flowers to left and right off-screen
+      exitTl.to(
+        ".wash-flower",
+        {
+          x: (i) => (WASH_FLOWERS[i].x < 0 ? "-120vw" : "120vw"),
+          y: (i) => `${WASH_FLOWERS[i].y * 1.2}vh`,
+          scale: (i) => WASH_FLOWERS[i].scale * 0.8,
+          rotation: (i) => (WASH_FLOWERS[i].x < 0 ? "-=120" : "+=120"),
+          duration: 1.5,
+          ease: "power3.inOut",
+          stagger: { each: 0.01, from: "center" },
+        },
+        0
+      );
+
+      // 2. Fade out wash background
+      exitTl.to(
+        "#wash-bg",
+        {
+          opacity: 0,
+          duration: 1.2,
+          ease: "power2.inOut",
+        },
+        0.1
+      );
+
+      // 3. Fade out container background and blur (instead of container opacity, so children flowers stay solid)
+      exitTl.to(
+        containerRef.current,
+        {
+          backgroundColor: "rgba(23, 14, 13, 0)",
+          backdropFilter: "blur(0px)",
+          duration: 1.2,
+          ease: "power2.inOut",
+        },
+        0.1
+      );
+    },
+    { scope: containerRef, dependencies: [isTransitioning, onTransitionComplete] }
+  );
+
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#170E0D]/95 backdrop-blur-md overflow-hidden select-none isolate"
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#170E0D]/95 backdrop-blur-md overflow-hidden select-none isolate ${
+        isTransitioning ? "pointer-events-none" : ""
+      }`}
     >
       {/* Ambient background blobs — tint dari Token_Desain (R5.5/R13.9) */}
       <div className="absolute inset-0 pointer-events-none opacity-20">
