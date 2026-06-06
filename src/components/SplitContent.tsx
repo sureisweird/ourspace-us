@@ -167,6 +167,99 @@ export default function SplitContent() {
       id="milestones"
       className="py-32 px-6 max-w-7xl mx-auto relative z-10"
     >
+      {/* Dense flower cluster in the left background (dekoratif, menumpuk tebal) */}
+      <div className="absolute left-[-10%] top-[5%] bottom-[5%] w-[40%] pointer-events-none z-0 overflow-hidden hidden lg:block" aria-hidden="true">
+        {/* Layer 1: Dedaunan besar paling belakang */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_1.svg"
+          alt=""
+          className="absolute left-[8%] top-[12%] w-48 h-auto rotate-[20deg] opacity-25 animate-sway [animation-delay:0.2s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_2.svg"
+          alt=""
+          className="absolute left-[-6%] top-[35%] w-56 h-auto rotate-[-30deg] opacity-25 animate-sway [animation-delay:0.8s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_3.svg"
+          alt=""
+          className="absolute left-[15%] top-[60%] w-52 h-auto rotate-[40deg] opacity-20 animate-sway [animation-delay:1.5s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_1.svg"
+          alt=""
+          className="absolute left-[-8%] top-[75%] w-44 h-auto rotate-[-15deg] opacity-20 animate-sway [animation-delay:0.5s]"
+        />
+
+        {/* Layer 2: Bunga-bunga menumpuk padat di atas daun */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_big_1.svg"
+          alt=""
+          className="absolute left-[-12%] top-[20%] w-60 h-auto rotate-12 opacity-35 animate-pulse-slow"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_medium_1.svg"
+          alt=""
+          className="absolute left-[12%] top-[28%] w-44 h-auto -rotate-45 opacity-35 animate-sway [animation-delay:0.6s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_medium_2.svg"
+          alt=""
+          className="absolute left-[-8%] top-[48%] w-52 h-auto rotate-45 opacity-35 animate-pulse-slow [animation-delay:1.2s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_medium_3.svg"
+          alt=""
+          className="absolute left-[8%] top-[42%] w-40 h-auto -rotate-12 opacity-40 animate-sway [animation-delay:1.8s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_big_1.svg"
+          alt=""
+          className="absolute left-[-6%] top-[65%] w-56 h-auto -rotate-12 opacity-35 animate-pulse-slow [animation-delay:0.4s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_medium_2.svg"
+          alt=""
+          className="absolute left-[10%] top-[72%] w-44 h-auto rotate-12 opacity-40 animate-sway [animation-delay:1s]"
+        />
+
+        {/* Layer 3: Kelopak-kelopak melayang di sela-sela bunga */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/petal_1.svg"
+          alt=""
+          className="absolute left-[24%] top-[25%] w-11 h-auto rotate-[60deg] opacity-45 animate-bounce"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/petal_3.svg"
+          alt=""
+          className="absolute left-[4%] top-[44%] w-14 h-auto -rotate-[30deg] opacity-45 animate-bounce [animation-delay:1s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/petal_5.svg"
+          alt=""
+          className="absolute left-[20%] top-[58%] w-12 h-auto rotate-12 opacity-40 animate-bounce [animation-delay:2s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/petal_2.svg"
+          alt=""
+          className="absolute left-[2%] top-[70%] w-10 h-auto -rotate-45 opacity-40 animate-bounce [animation-delay:0.5s]"
+        />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-stretch">
 
         {/* Left Column - Sticky Flower Bouquet */}
