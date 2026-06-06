@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useRef } from "react";
+import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import { Sparkle } from "@phosphor-icons/react";
+import { SparkleIcon } from "@phosphor-icons/react";
+import AmbientPetals from "./AmbientPetals";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -42,50 +43,120 @@ const CARDS: GreetingCardItem[] = [
   },
 ];
 
+const ASSET_BASE = "/assets/hibiscus_flower";
+
+/**
+ * Komposisi bouquet dari Aset_Bunga (R7.5 / R13.3). Disusun berlapis:
+ * daun di belakang, bunga medium mengelilingi, bunga besar di pusat,
+ * dan benang sari sebagai aksen. Tiap layer dirender sebagai <img>
+ * dekoratif (pointer-events-none, aria-hidden) — lihat BouquetAsset.
+ * Posisi memakai persentase agar skala mengikuti `.bouquet-wrap`.
+ */
+const BOUQUET_LAYERS: { src: string; className: string; layer: "back" | "front" }[] = [
+  // Daun (lapisan belakang) — leaf_1..3
+  { src: "leaf_3.svg", className: "w-28 left-[6%] top-[14%] -rotate-[28deg] opacity-90", layer: "back" },
+  { src: "leaf_2.svg", className: "w-28 right-[4%] top-[18%] rotate-[34deg] opacity-90", layer: "back" },
+  { src: "leaf_1.svg", className: "w-24 left-[30%] top-[4%] -rotate-[6deg] opacity-95", layer: "back" },
+  // Bunga medium mengelilingi pusat — flower_medium_1..3
+  { src: "flower_medium_1.svg", className: "w-24 left-[4%] top-[30%] -rotate-12", layer: "front" },
+  { src: "flower_medium_2.svg", className: "w-24 right-[4%] top-[34%] rotate-12", layer: "front" },
+  { src: "flower_medium_3.svg", className: "w-20 left-[34%] top-[12%]", layer: "front" },
+  // Bunga besar di pusat — flower_big_1
+  { src: "flower_big_1.svg", className: "w-36 left-1/2 top-[26%] -translate-x-1/2", layer: "front" },
+  // Benang sari sebagai aksen — stamen_1..4
+  { src: "stamen_1.svg", className: "w-12 left-[20%] top-[44%] -rotate-[18deg]", layer: "front" },
+  { src: "stamen_2.svg", className: "w-12 right-[20%] top-[46%] rotate-[18deg]", layer: "front" },
+  { src: "stamen_3.svg", className: "w-10 left-[42%] top-[40%]", layer: "front" },
+  { src: "stamen_4.svg", className: "w-10 right-[34%] top-[30%] rotate-[8deg]", layer: "front" },
+];
+
+/**
+ * Aset bouquet dekoratif. Graceful degradation (R13.6): bila aset gagal
+ * dimuat, sembunyikan elemen tanpa merusak tata letak (kontainer tetap
+ * pointer-events-none + aria-hidden).
+ */
+function BouquetAsset({ src, className }: { src: string; className: string }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={`${ASSET_BASE}/${src}`}
+      alt=""
+      aria-hidden="true"
+      draggable={false}
+      onError={(e) => {
+        e.currentTarget.style.display = "none";
+      }}
+      className={`absolute h-auto select-none ${className}`}
+    />
+  );
+}
+
 export default function SplitContent() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const leftColRef = useRef<HTMLDivElement>(null);
   const rightColRef = useRef<HTMLDivElement>(null);
 
   useGSAP(
     () => {
-      // Animate cards sliding up on scroll
-      const cards = gsap.utils.toArray<HTMLElement>(".greeting-card");
-      cards.forEach((card) => {
+      const mm = gsap.matchMedia();
+
+      // Gerak penuh: animasi masuk kartu + sway bouquet.
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        // Animasi kartu meluncur masuk saat menggulir (easing ease-out/spring).
+        const cards = gsap.utils.toArray<HTMLElement>(".greeting-card");
+        cards.forEach((card) => {
+          gsap.fromTo(
+            card,
+            { y: 80, opacity: 0 },
+            {
+              y: 0,
+              opacity: 1,
+              duration: 1.2,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: card,
+                start: "top 85%",
+                end: "top 55%",
+                toggleActions: "play none none none",
+                invalidateOnRefresh: true,
+              },
+            }
+          );
+        });
+
+        // 3D Parallax Sway: Lapisan belakang daun bergoyang lebih lambat dan sempit.
         gsap.fromTo(
-          card,
-          { y: 80, opacity: 0 },
+          ".bouquet-sway-back",
+          { rotation: -1.5, y: 0 },
           {
-            y: 0,
-            opacity: 1,
-            duration: 1.2,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: card,
-              start: "top 85%",
-              end: "top 55%",
-              toggleActions: "play none none none",
-              // FIX: recalculate posisi start/end saat ScrollTrigger.refresh()
-              // dipanggil (mis. setelah animasi masuk konten utama selesai),
-              // supaya kartu tidak tertinggal di opacity:0 karena posisi
-              // trigger dihitung saat layout masih bergeser.
-              invalidateOnRefresh: true,
-            },
+            rotation: 1.5,
+            y: -4,
+            duration: 8,
+            ease: "sine.inOut",
+            repeat: -1,
+            yoyo: true,
+          }
+        );
+
+        // 3D Parallax Sway: Lapisan depan bunga & aksen bergoyang lebih cepat dan lebar.
+        gsap.fromTo(
+          ".bouquet-sway-front",
+          { rotation: -3.5, y: 0 },
+          {
+            rotation: 3.5,
+            y: -10,
+            duration: 5,
+            ease: "sine.inOut",
+            repeat: -1,
+            yoyo: true,
           }
         );
       });
 
-      // Animate bouquet subtle scroll sway
-      gsap.to(".bouquet-wrap", {
-        rotation: 6,
-        y: -15,
-        ease: "sine.inOut",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top center",
-          end: "bottom bottom",
-          scrub: 1,
-        },
+      // Gerak tereduksi: tampilkan keadaan akhir statis, tanpa animasi ambient.
+      mm.add("(prefers-reduced-motion: reduce)", () => {
+        gsap.set(".greeting-card", { opacity: 1, y: 0 });
+        gsap.set(".bouquet-sway-back", { rotation: 0, y: 0 });
+        gsap.set(".bouquet-sway-front", { rotation: 0, y: 0 });
       });
     },
     { scope: containerRef }
@@ -95,112 +166,226 @@ export default function SplitContent() {
     <section
       ref={containerRef}
       id="milestones"
-      className="py-32 px-6 max-w-7xl mx-auto relative z-10"
+      className="py-32 px-6 w-full relative overflow-hidden z-10"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24">
-        
+      {/* Background Decorative Flowers/Leaves (pointer-events-none, aria-hidden, menumpuk padat hampir memenuhi latar belakang, solid) */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden hidden lg:block" aria-hidden="true">
+        {/* Kiri - Tumpukan padat melimpah meluas ke tengah, diletakkan mulai dari top-[32%] ke bawah agar tidak menutupi teks Heading Chapter II */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_3.svg"
+          alt=""
+          className="absolute -left-16 top-[32%] w-56 h-auto -rotate-12 animate-sway"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_1.svg"
+          alt=""
+          className="absolute left-[4%] top-[38%] w-60 h-auto rotate-45 animate-sway [animation-delay:0.5s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_2.svg"
+          alt=""
+          className="absolute left-[10%] top-[44%] w-52 h-auto -rotate-30 animate-sway [animation-delay:1.2s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_3.svg"
+          alt=""
+          className="absolute left-[16%] top-[50%] w-48 h-auto rotate-15 animate-sway [animation-delay:0.3s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_1.svg"
+          alt=""
+          className="absolute left-[22%] top-[56%] w-56 h-auto -rotate-45 animate-sway [animation-delay:0.9s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_2.svg"
+          alt=""
+          className="absolute left-[28%] top-[62%] w-52 h-auto rotate-30 animate-sway [animation-delay:1.5s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_3.svg"
+          alt=""
+          className="absolute left-[34%] top-[68%] w-44 h-auto -rotate-12 animate-sway [animation-delay:0.7s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_1.svg"
+          alt=""
+          className="absolute left-[40%] top-[74%] w-40 h-auto rotate-25 animate-sway [animation-delay:1.1s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_2.svg"
+          alt=""
+          className="absolute left-[44%] top-[80%] w-36 h-auto -rotate-15 animate-sway [animation-delay:0.4s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_3.svg"
+          alt=""
+          className="absolute left-[46%] top-[86%] w-32 h-auto rotate-12 animate-sway [animation-delay:0.8s]"
+        />
+
+        {/* Bunga Besar Solid */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_big_1.svg"
+          alt=""
+          className="absolute -left-12 top-[35%] w-64 h-auto rotate-12 animate-pulse-solid"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_big_1.svg"
+          alt=""
+          className="absolute left-[6%] top-[48%] w-60 h-auto -rotate-12 animate-pulse-solid [animation-delay:1.5s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_big_1.svg"
+          alt=""
+          className="absolute left-[18%] top-[60%] w-64 h-auto rotate-25 animate-pulse-solid [animation-delay:0.8s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_big_1.svg"
+          alt=""
+          className="absolute left-[30%] top-[72%] w-56 h-auto -rotate-20 animate-pulse-solid [animation-delay:1.9s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_big_1.svg"
+          alt=""
+          className="absolute left-[42%] top-[84%] w-50 h-auto rotate-15 animate-pulse-solid [animation-delay:1.1s]"
+        />
+
+        {/* Bunga Medium Solid */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_medium_2.svg"
+          alt=""
+          className="absolute left-[8%] top-[32%] w-44 h-auto rotate-45 animate-sway"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_medium_3.svg"
+          alt=""
+          className="absolute left-[12%] top-[42%] w-48 h-auto -rotate-12 animate-sway [animation-delay:0.6s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_medium_1.svg"
+          alt=""
+          className="absolute left-[24%] top-[52%] w-40 h-auto rotate-15 animate-sway [animation-delay:1.0s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_medium_2.svg"
+          alt=""
+          className="absolute left-[32%] top-[64%] w-44 h-auto -rotate-30 animate-sway [animation-delay:0.4s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_medium_3.svg"
+          alt=""
+          className="absolute left-[38%] top-[76%] w-38 h-auto rotate-10 animate-sway [animation-delay:1.3s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_medium_1.svg"
+          alt=""
+          className="absolute left-[44%] top-[88%] w-36 h-auto -rotate-15 animate-sway [animation-delay:1.7s]"
+        />
+
+        {/* Benang Sari */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/stamen_3.svg"
+          alt=""
+          className="absolute left-[10%] top-[36%] w-12 h-auto rotate-20 animate-sway"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/stamen_4.svg"
+          alt=""
+          className="absolute left-[20%] top-[54%] w-14 h-auto -rotate-15 animate-sway"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/stamen_1.svg"
+          alt=""
+          className="absolute left-[30%] top-[70%] w-11 h-auto rotate-10 animate-sway [animation-delay:0.5s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/stamen_2.svg"
+          alt=""
+          className="absolute left-[38%] top-[82%] w-10 h-auto -rotate-25 animate-sway [animation-delay:1.1s]"
+        />
+
+        {/* Kelopak Melayang Bebas (GSAP Ambient Petals - Solid) */}
+        <AmbientPetals solid={true} />
+      </div>
+
+      <div className="max-w-7xl mx-auto w-full relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-stretch">
+
         {/* Left Column - Sticky Flower Bouquet */}
-        <div className="lg:col-span-5 flex flex-col justify-start">
-          <div ref={leftColRef} className="lg:sticky lg:top-24 h-fit flex flex-col items-center">
-            
+        <div className="lg:col-span-5 relative w-full">
+          <div className="lg:sticky lg:top-24 h-fit flex flex-col items-center w-full">
+
             {/* Visual Heading for Column */}
             <div className="text-center lg:text-left w-full mb-8">
-              <span className="font-mono text-xs tracking-[0.25em] uppercase text-[#2A1F1D]/65 block mb-2">
+              <span className="font-mono text-xs tracking-[0.25em] uppercase text-foreground/65 block mb-2">
                 Chapter II
               </span>
-              <h2 className="text-3xl font-sans font-light tracking-tight text-[#2A1F1D]">
+              <h2 className="text-subheading font-sans font-light tracking-tight text-foreground">
                 A bouquet grown from <br />
-                <span className="font-cursive text-4xl text-[#E5989B]">years of affection</span>
+                <span className="font-cursive text-4xl text-accent">years of affection</span>
               </h2>
             </div>
 
-            {/* Bouquet SVG wrapper */}
-            <div className="bouquet-wrap w-72 h-96 relative flex items-center justify-center filter drop-shadow-[0_15px_30px_rgba(229,152,155,0.15)] bg-[#FFF6F5]/40 rounded-3xl p-6 border border-[#F2E5E3]/30">
-              <svg
-                viewBox="0 0 200 250"
-                className="w-full h-full"
-              >
-                {/* Stems */}
-                <g stroke="#7D8F69" strokeWidth="3" strokeLinecap="round">
-                  <line x1="100" y1="120" x2="80" y2="210" />
-                  <line x1="100" y1="120" x2="100" y2="215" />
-                  <line x1="100" y1="120" x2="120" y2="210" />
-                  <line x1="100" y1="120" x2="65" y2="185" />
-                  <line x1="100" y1="120" x2="135" y2="185" />
-                </g>
+            {/* Bouquet Card Container */}
+            <div className="relative w-72 h-96 group/bouquet">
+              {/* Ambient Glow Orb behind the card */}
+              <div 
+                className="absolute -inset-4 bg-radial-gradient from-accent/20 via-blush/10 to-transparent rounded-[3rem] blur-2xl opacity-80 pointer-events-none group-hover/bouquet:opacity-100 transition-opacity duration-700" 
+                aria-hidden="true" 
+              />
+              
+              {/* Main Card Element */}
+              <div className="absolute inset-0 rounded-card glass-surface shadow-elevation-2 border border-foreground/5 overflow-hidden transition-all duration-500 hover:shadow-elevation-3 hover:border-accent/20">
+                <div className="relative w-full h-full flex items-center justify-center p-6">
+                  {/* Lapisan aset bouquet (dekoratif, pointer-events-none + aria-hidden) */}
+                  <div className="absolute inset-6 pointer-events-none" aria-hidden="true">
+                    {BOUQUET_LAYERS.map((layer) => (
+                      <BouquetAsset 
+                        key={layer.src} 
+                        src={layer.src} 
+                        className={`${layer.className} ${
+                          layer.layer === "back" ? "bouquet-sway-back" : "bouquet-sway-front"
+                        }`} 
+                      />
+                    ))}
 
-                {/* Leaves */}
-                <g fill="#93A87D" stroke="#7D8F69" strokeWidth="1">
-                  {/* Left leaf */}
-                  <path d="M 75 160 C 55 155 50 140 65 135 C 75 140 80 150 75 160 Z" />
-                  {/* Right leaf */}
-                  <path d="M 125 160 C 145 155 150 140 135 135 C 125 140 120 150 125 160 Z" />
-                  {/* Central leaf high */}
-                  <path d="M 100 85 C 100 65 110 55 115 70 C 110 80 105 85 100 85 Z" />
-                  {/* Leaf left-high */}
-                  <path d="M 85 90 C 70 80 65 70 80 75 C 85 80 90 85 85 90 Z" />
-                </g>
+                    {/* Pembungkus bouquet — tint dari Token_Desain (R13.9) */}
+                    <div className="absolute bottom-[2%] left-1/2 -translate-x-1/2 w-24 h-24 rounded-b-[3rem] rounded-t-inner bg-surface/90 border border-foreground/5 shadow-inner" />
+                    <div className="absolute bottom-[16%] left-1/2 -translate-x-1/2 w-32 h-3 rounded-pill bg-accent/70 shadow-xs" />
+                  </div>
 
-                {/* Flower 1 - Left Rose (Pink Blush) */}
-                <g transform="translate(65, 110)">
-                  <circle cx="0" cy="0" r="22" fill="#FFC8DD" />
-                  <path d="M -15 -10 C -5 -25 10 -20 15 -5 C 5 15 -10 10 -15 -10 Z" fill="#FFA2B6" opacity="0.8" />
-                  <path d="M -8 5 C 5 -10 15 -5 8 12 C -2 15 -5 10 -8 5 Z" fill="#FF85A1" opacity="0.9" />
-                  <circle cx="0" cy="0" r="5" fill="#FF7096" />
-                </g>
-
-                {/* Flower 2 - Right Rose (Cream Apricot) */}
-                <g transform="translate(135, 110)">
-                  <circle cx="0" cy="0" r="20" fill="#FFE5D9" />
-                  <path d="M -10 -10 C 5 -20 20 -15 10 -2 C 2 12 -12 8 -10 -10 Z" fill="#FFCAD4" opacity="0.8" />
-                  <path d="M -5 3 C 5 -8 12 -3 5 10 C -2 10 -3 5 -5 3 Z" fill="#F4ACB7" opacity="0.9" />
-                  <circle cx="0" cy="0" r="4" fill="#D8A3A9" />
-                </g>
-
-                {/* Flower 3 - Center Red Rose (Deep Rose) */}
-                <g transform="translate(100, 95)">
-                  <circle cx="0" cy="0" r="26" fill="#E5989B" />
-                  <path d="M -18 -12 C -6 -30 15 -25 20 -6 C 10 18 -12 12 -18 -12 Z" fill="#B56576" opacity="0.8" />
-                  <path d="M -10 6 C 5 -12 20 -6 10 15 C -2 18 -5 12 -10 6 Z" fill="#9B5DE5" opacity="0.15" />
-                  <path d="M -8 2 C 2 -8 12 -4 8 10 C -2 10 -5 6 -8 2 Z" fill="#6D597A" opacity="0.3" />
-                  <circle cx="0" cy="0" r="6" fill="#6D597A" />
-                </g>
-
-                {/* Flower 4 - Top Bud (Misty Rose) */}
-                <g transform="translate(100, 60)">
-                  <ellipse cx="0" cy="0" rx="14" ry="12" fill="#FFE5EC" />
-                  <path d="M -8 4 C -2 -10 10 -10 8 4 Z" fill="#FFC8DD" />
-                  <circle cx="0" cy="0" r="3" fill="#E5989B" />
-                </g>
-
-                {/* Bouquet Wrapping Paper Overlay */}
-                <path
-                  d="M 60 170 C 80 180 120 180 140 170 L 120 220 C 110 225 90 225 80 220 Z"
-                  fill="#FFFBF9"
-                  stroke="#F2E5E3"
-                  strokeWidth="2"
-                  opacity="0.9"
-                />
-                
-                {/* Paper Ribbons */}
-                <path d="M 60 170 C 85 160 115 160 140 170" fill="none" stroke="#FFB7B2" strokeWidth="2" />
-
-                {/* Wrap Ribbon Bow */}
-                <g transform="translate(100, 182)">
-                  <ellipse cx="-10" cy="-2" rx="10" ry="6" fill="#FFB7B2" transform="rotate(-15)" />
-                  <ellipse cx="10" cy="-2" rx="10" ry="6" fill="#FFB7B2" transform="rotate(15)" />
-                  <circle cx="0" cy="-2" r="4" fill="#FF9F9C" />
-                  <path d="M -2 0 L -12 18" stroke="#FFB7B2" strokeWidth="3" strokeLinecap="round" />
-                  <path d="M 2 0 L 12 18" stroke="#FFB7B2" strokeWidth="3" strokeLinecap="round" />
-                </g>
-              </svg>
-
-              {/* Floating micro sparks around bouquet */}
-              <div className="absolute top-8 left-8 text-[#FFCAD4]/60 animate-bounce">
-                <Sparkle size={14} weight="fill" />
-              </div>
-              <div className="absolute bottom-16 right-8 text-[#FFCAD4]/60 animate-bounce [animation-delay:1.5s]">
-                <Sparkle size={16} weight="fill" />
+                  {/* Floating micro sparks around bouquet (ambient — dimatikan saat reduced-motion via CSS) */}
+                  <div className="absolute top-8 left-8 text-accent/50 animate-bounce" aria-hidden="true">
+                    <SparkleIcon size={14} weight="fill" />
+                  </div>
+                  <div className="absolute bottom-16 right-8 text-accent/50 animate-bounce [animation-delay:1.5s]" aria-hidden="true">
+                    <SparkleIcon size={16} weight="fill" />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -212,34 +397,38 @@ export default function SplitContent() {
           {CARDS.map((card, idx) => (
             <div
               key={idx}
-              className="greeting-card bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-[#F2E5E3]/40 hover:shadow-md transition-shadow relative overflow-hidden group"
+              className="greeting-card bg-surface p-8 md:p-12 rounded-card shadow-elevation-1 border border-foreground/5 hover:shadow-elevation-2 hover:-translate-y-1.5 transition-all duration-500 transition-spring relative overflow-hidden group"
             >
+              {/* Subtle top indicator line on hover */}
+              <div className="absolute top-0 left-0 right-0 h-[3px] bg-linear-to-r from-accent/40 via-accent to-accent/40 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-700 transition-spring origin-left" />
+
               {/* Subtle background color hue pattern */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-bl from-[#FFF0EE] to-transparent opacity-60 rounded-bl-full pointer-events-none transition-transform group-hover:scale-110" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-bl from-accent/10 to-transparent opacity-60 rounded-bl-full pointer-events-none transition-transform transition-spring group-hover:scale-110" />
 
               {/* Card Meta */}
               <div className="flex justify-between items-center mb-8">
-                <span className="font-mono text-xs text-[#E5989B] tracking-[0.2em] font-semibold uppercase">
+                <span className="font-mono text-xs text-accent tracking-[0.2em] font-semibold uppercase">
                   {card.year}
                 </span>
-                <span className="font-mono text-[10px] text-[#2A1F1D]/55 tracking-wider uppercase border border-[#F2E5E3] px-3 py-1 rounded-full bg-[#FFFBF9]">
+                <span className="font-mono text-[10px] text-foreground/55 tracking-wider uppercase border border-foreground/10 px-3 py-1 rounded-pill bg-background/80 backdrop-blur-xs">
                   {card.milestone}
                 </span>
               </div>
 
               {/* Card Headline */}
-              <h3 className="text-2xl md:text-3xl font-sans font-light text-[#2A1F1D] tracking-tight mb-4">
+              <h3 className="text-2xl md:text-3xl font-sans font-light text-foreground tracking-tight mb-4 group-hover:text-accent-strong transition-colors duration-300">
                 {card.title}
               </h3>
 
               {/* Card Body */}
-              <p className="text-[#2A1F1D]/75 text-sm md:text-base leading-relaxed">
+              <p className="text-foreground/75 text-sm md:text-base leading-relaxed">
                 {card.message}
               </p>
             </div>
           ))}
         </div>
 
+      </div>
       </div>
     </section>
   );

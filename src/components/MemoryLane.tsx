@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { Heart, X } from "@phosphor-icons/react";
+import { HeartIcon, XIcon } from "@phosphor-icons/react";
+import PolaroidCard from "./PolaroidCard";
+import AmbientPetals from "./AmbientPetals";
 
 interface PolaroidItem {
   id: number;
@@ -15,6 +17,13 @@ interface PolaroidItem {
   offsetClass: string;
 }
 
+// Bayangan berlapis (Token_Desain) sebagai literal agar dapat diinterpolasi GSAP.
+// Mengacu pada --shadow-elevation-* di globals.css.
+const SHADOW_REST =
+  "0 4px 20px rgba(42, 31, 29, 0.06), 0 12px 40px rgba(42, 31, 29, 0.08)"; // elevation-2
+const SHADOW_HOVER =
+  "0 12px 32px rgba(42, 31, 29, 0.08), 0 32px 80px rgba(42, 31, 29, 0.12)"; // elevation-3
+
 const MEMORIES: PolaroidItem[] = [
   {
     id: 1,
@@ -23,7 +32,7 @@ const MEMORIES: PolaroidItem[] = [
     caption: "Where our fingers met, holding on forever",
     date: "June 14, 2023",
     colSpanClass: "md:col-span-4",
-    offsetClass: "md:translate-y-4",
+    offsetClass: "",
   },
   {
     id: 2,
@@ -32,7 +41,7 @@ const MEMORIES: PolaroidItem[] = [
     caption: "A quiet sunset toast under gold skies",
     date: "August 29, 2023",
     colSpanClass: "md:col-span-4",
-    offsetClass: "md:-translate-y-8",
+    offsetClass: "",
   },
   {
     id: 3,
@@ -41,7 +50,7 @@ const MEMORIES: PolaroidItem[] = [
     caption: "Walking through a golden, silent forest",
     date: "October 12, 2024",
     colSpanClass: "md:col-span-4",
-    offsetClass: "md:translate-y-12",
+    offsetClass: "",
   },
   {
     id: 4,
@@ -49,8 +58,8 @@ const MEMORIES: PolaroidItem[] = [
     fallbackUrl: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&q=80&w=600",
     caption: "A simple heart drawn in the seaside sand",
     date: "January 03, 2025",
-    colSpanClass: "md:col-span-6",
-    offsetClass: "md:-translate-y-2",
+    colSpanClass: "md:col-span-4 md:col-start-3",
+    offsetClass: "",
   },
   {
     id: 5,
@@ -58,8 +67,8 @@ const MEMORIES: PolaroidItem[] = [
     fallbackUrl: "https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&q=80&w=600",
     caption: "Soft lighting, flowers, and your sweet laughter",
     date: "March 18, 2025",
-    colSpanClass: "md:col-span-6",
-    offsetClass: "md:translate-y-6",
+    colSpanClass: "md:col-span-4",
+    offsetClass: "",
   },
 ];
 
@@ -88,26 +97,40 @@ export default function MemoryLane() {
     () => {
       const cards = gsap.utils.toArray<HTMLElement>(".polaroid-card");
 
+      // Hormati Gerak_Tereduksi: matikan float ambient berulang, tampilkan
+      // keadaan akhir statis. Umpan balik elevation hover tetap dipertahankan.
+      const prefersReduced =
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
       cards.forEach((card) => {
         const initialRotation = gsap.utils.random(-5, 5);
-        gsap.set(card, { rotation: initialRotation, transformOrigin: "center center" });
-
-        const floatTween = gsap.to(card, {
-          y: () => `+=${gsap.utils.random(-8, 8)}`,
-          x: () => `+=${gsap.utils.random(-4, 4)}`,
-          duration: gsap.utils.random(4, 6),
-          repeat: -1,
-          yoyo: true,
-          ease: "sine.inOut",
+        gsap.set(card, {
+          rotation: initialRotation,
+          transformOrigin: "center center",
+          boxShadow: SHADOW_REST,
         });
 
+        // Float ambient hanya saat gerak tidak direduksi (R9.3)
+        const floatTween = prefersReduced
+          ? null
+          : gsap.to(card, {
+              y: () => `+=${gsap.utils.random(-8, 8)}`,
+              x: () => `+=${gsap.utils.random(-4, 4)}`,
+              duration: gsap.utils.random(4, 6),
+              repeat: -1,
+              yoyo: true,
+              ease: "sine.inOut",
+            });
+
+        // Umpan balik kedalaman (elevation) saat hover ≤500ms (R6.2)
         card.addEventListener("mouseenter", () => {
-          floatTween.pause();
+          floatTween?.pause();
           gsap.to(card, {
             scale: 1.05,
             rotation: gsap.utils.random(-1, 1),
             z: 20,
-            boxShadow: "0 25px 50px -12px rgba(42,31,29,0.15)",
+            boxShadow: SHADOW_HOVER,
             duration: 0.4,
             ease: "power2.out",
           });
@@ -118,10 +141,10 @@ export default function MemoryLane() {
             scale: 1,
             rotation: initialRotation,
             z: 0,
-            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.02)",
+            boxShadow: SHADOW_REST,
             duration: 0.5,
             ease: "power2.out",
-            onComplete: () => floatTween.resume(),
+            onComplete: () => floatTween?.resume(),
           });
         });
       });
@@ -133,80 +156,334 @@ export default function MemoryLane() {
     <section
       ref={containerRef}
       id="memories"
-      className="py-32 px-6 max-w-7xl mx-auto relative z-10"
+      className="py-32 px-6 w-full relative z-10"
     >
-      {/* Section Header */}
+      {/* Background Decorative Flowers/Leaves (pointer-events-none, aria-hidden, menumpuk padat hampir memenuhi latar belakang, solid) */}
+      <div className="absolute inset-0 pointer-events-none z-0 hidden lg:block" aria-hidden="true">
+        {/* Kiri - Dikosongkan sesuai permintaan user (cukup dari arah kanan saja) */}
+
+        {/* Kanan - Tumpukan padat melimpah meluas ke tengah (hingga 48% lebar layar) dari atas sampai bawah */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_3.svg"
+          alt=""
+          className="absolute -right-16 top-[10%] w-56 h-auto -rotate-12 animate-sway"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_1.svg"
+          alt=""
+          className="absolute right-[4%] top-[20%] w-60 h-auto rotate-45 animate-sway [animation-delay:0.5s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_2.svg"
+          alt=""
+          className="absolute right-[10%] top-[30%] w-52 h-auto -rotate-30 animate-sway [animation-delay:1.2s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_3.svg"
+          alt=""
+          className="absolute right-[16%] top-[40%] w-48 h-auto rotate-15 animate-sway [animation-delay:0.3s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_1.svg"
+          alt=""
+          className="absolute right-[22%] top-[50%] w-56 h-auto -rotate-45 animate-sway [animation-delay:0.9s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_2.svg"
+          alt=""
+          className="absolute right-[28%] top-[60%] w-52 h-auto rotate-30 animate-sway [animation-delay:1.5s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_3.svg"
+          alt=""
+          className="absolute right-[34%] top-[70%] w-44 h-auto -rotate-12 animate-sway [animation-delay:0.7s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_3.svg"
+          alt=""
+          className="absolute right-[10%] top-[72%] w-56 h-auto rotate-45 animate-sway [animation-delay:0.8s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_1.svg"
+          alt=""
+          className="absolute right-[18%] top-[76%] w-48 h-auto -rotate-12 animate-sway [animation-delay:1.4s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_1.svg"
+          alt=""
+          className="absolute right-[40%] top-[80%] w-40 h-auto rotate-25 animate-sway [animation-delay:1.1s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_2.svg"
+          alt=""
+          className="absolute right-[48%] top-[82%] w-52 h-auto rotate-30 animate-sway [animation-delay:0.2s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_3.svg"
+          alt=""
+          className="absolute right-[26%] top-[85%] w-44 h-auto -rotate-45 animate-sway [animation-delay:1.0s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_1.svg"
+          alt=""
+          className="absolute -right-8 top-[88%] w-52 h-auto rotate-15 animate-sway [animation-delay:0.6s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_2.svg"
+          alt=""
+          className="absolute right-[44%] top-[90%] w-36 h-auto -rotate-15 animate-sway [animation-delay:0.4s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_2.svg"
+          alt=""
+          className="absolute right-[32%] top-[92%] w-48 h-auto rotate-60 animate-sway [animation-delay:1.3s]"
+        />
+
+        {/* Bunga Besar Solid */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_big_1.svg"
+          alt=""
+          className="absolute -right-12 top-[15%] w-64 h-auto rotate-12 animate-pulse-solid"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_big_1.svg"
+          alt=""
+          className="absolute right-[6%] top-[35%] w-60 h-auto -rotate-12 animate-pulse-solid [animation-delay:1.5s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_big_1.svg"
+          alt=""
+          className="absolute right-[18%] top-[55%] w-64 h-auto rotate-25 animate-pulse-solid [animation-delay:0.8s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_big_1.svg"
+          alt=""
+          className="absolute right-[30%] top-[75%] w-56 h-auto -rotate-20 animate-pulse-solid [animation-delay:1.9s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_big_1.svg"
+          alt=""
+          className="absolute right-[5%] top-[82%] w-60 h-auto rotate-45 animate-pulse-solid [animation-delay:1.2s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_big_1.svg"
+          alt=""
+          className="absolute right-[22%] top-[88%] w-64 h-auto -rotate-12 animate-pulse-solid [animation-delay:0.5s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_big_1.svg"
+          alt=""
+          className="absolute -right-4 top-[92%] w-56 h-auto rotate-25 animate-pulse-solid [animation-delay:1.7s]"
+        />
+
+        {/* Bunga Medium Solid */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_medium_2.svg"
+          alt=""
+          className="absolute right-[8%] top-[8%] w-44 h-auto rotate-45 animate-sway"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_medium_3.svg"
+          alt=""
+          className="absolute right-[12%] top-[28%] w-48 h-auto -rotate-12 animate-sway [animation-delay:0.6s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_medium_1.svg"
+          alt=""
+          className="absolute right-[24%] top-[48%] w-40 h-auto rotate-15 animate-sway [animation-delay:1.0s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_medium_2.svg"
+          alt=""
+          className="absolute right-[32%] top-[68%] w-44 h-auto -rotate-30 animate-sway [animation-delay:0.4s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_medium_1.svg"
+          alt=""
+          className="absolute right-[14%] top-[70%] w-48 h-auto rotate-15 animate-sway [animation-delay:0.9s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_medium_2.svg"
+          alt=""
+          className="absolute right-[44%] top-[78%] w-40 h-auto -rotate-30 animate-sway [animation-delay:1.6s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_medium_3.svg"
+          alt=""
+          className="absolute right-[12%] top-[86%] w-44 h-auto rotate-60 animate-sway [animation-delay:0.3s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_medium_3.svg"
+          alt=""
+          className="absolute right-[38%] top-[88%] w-38 h-auto rotate-10 animate-sway [animation-delay:1.3s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_medium_1.svg"
+          alt=""
+          className="absolute right-[36%] top-[94%] w-48 h-auto -rotate-15 animate-sway [animation-delay:1.1s]"
+        />
+
+        {/* Benang Sari */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/stamen_3.svg"
+          alt=""
+          className="absolute right-[10%] top-[18%] w-12 h-auto rotate-20 animate-sway"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/stamen_4.svg"
+          alt=""
+          className="absolute right-[20%] top-[38%] w-14 h-auto -rotate-15 animate-sway"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/stamen_1.svg"
+          alt=""
+          className="absolute right-[30%] top-[58%] w-11 h-auto rotate-10 animate-sway [animation-delay:0.5s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/stamen_3.svg"
+          alt=""
+          className="absolute right-[16%] top-[74%] w-12 h-auto rotate-10 animate-sway [animation-delay:0.7s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/stamen_2.svg"
+          alt=""
+          className="absolute right-[38%] top-[78%] w-10 h-auto -rotate-25 animate-sway [animation-delay:1.1s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/stamen_4.svg"
+          alt=""
+          className="absolute right-[28%] top-[84%] w-14 h-auto -rotate-20 animate-sway [animation-delay:1.5s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/stamen_1.svg"
+          alt=""
+          className="absolute right-[8%] top-[88%] w-10 h-auto rotate-35 animate-sway [animation-delay:0.2s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/stamen_2.svg"
+          alt=""
+          className="absolute right-[42%] top-[91%] w-11 h-auto -rotate-10 animate-sway [animation-delay:0.9s]"
+        />
+
+        {/* Bunga menembus ke Chapter 2 (overlapping transition) */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_3.svg"
+          alt=""
+          className="absolute right-[44%] top-[96%] w-48 h-auto rotate-12 animate-sway [animation-delay:0.5s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/stamen_3.svg"
+          alt=""
+          className="absolute right-[38%] top-[101%] w-12 h-auto rotate-15 animate-sway [animation-delay:1.0s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_big_1.svg"
+          alt=""
+          className="absolute right-[36%] top-full w-60 h-auto -rotate-12 animate-pulse-solid [animation-delay:0.8s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/flower_medium_2.svg"
+          alt=""
+          className="absolute right-[42%] top-[104%] w-44 h-auto rotate-30 animate-sway [animation-delay:1.2s]"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/hibiscus_flower/leaf_1.svg"
+          alt=""
+          className="absolute right-[30%] top-[108%] w-52 h-auto -rotate-45 animate-sway [animation-delay:0.2s]"
+        />
+
+        {/* Kelopak Melayang Bebas (GSAP Ambient Petals - Solid) */}
+        <AmbientPetals solid={true} />
+      </div>
+
+      <div className="max-w-7xl mx-auto w-full relative z-10">
+        {/* Section Header */}
       <div className="max-w-xl mb-24">
         <div className="flex items-center gap-2 mb-4">
-          <Heart size={16} weight="fill" className="text-[#FFB7B2]" />
-          <span className="font-mono text-xs tracking-[0.25em] uppercase text-[#2A1F1D]/65">
+          <HeartIcon size={16} weight="fill" className="text-accent" />
+          <span className="font-mono text-xs tracking-[0.25em] uppercase text-foreground/65">
             Chapter I
           </span>
         </div>
-        <h2 className="text-4xl md:text-5xl font-sans tracking-tight font-light mb-6 text-[#2A1F1D] leading-tight">
+        <h2 className="text-4xl md:text-5xl font-sans tracking-tight font-light mb-6 text-foreground leading-tight">
           A physical archive <br />
-          of our <span className="font-cursive text-5xl md:text-6xl text-[#E5989B]">sweetest moments</span>.
+          of our <span className="font-cursive text-5xl md:text-6xl text-accent">sweetest moments</span>.
         </h2>
-        <p className="text-[#2A1F1D]/80 text-sm leading-relaxed max-w-[45ch]">
+        <p className="text-foreground/80 text-sm leading-relaxed max-w-[45ch]">
           Polaroid snapshots from our journey together. Hover over them to take a closer look at our favorite days.
         </p>
       </div>
 
       {/* Polaroid Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 pt-8">
+      <div 
+        className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 pt-8"
+        style={{ perspective: 1000 }}
+      >
         {MEMORIES.map((memory) => (
-          <div
+          <PolaroidCard
             key={memory.id}
+            id={memory.id}
+            localUrl={memory.localUrl}
+            fallbackUrl={memory.fallbackUrl}
+            caption={memory.caption}
+            date={memory.date}
+            className={`${memory.colSpanClass} ${memory.offsetClass}`}
+            style={{ transformStyle: "preserve-3d" }}
             onClick={() => setSelected(memory)}
-            role="button"
-            tabIndex={0}
-            aria-label={`Buka foto: ${memory.caption}`}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                setSelected(memory);
-              }
-            }}
-            className={`polaroid-card bg-white p-4 pb-6 rounded-sm shadow-md border border-[#F2E5E3]/40 flex flex-col justify-between h-fit cursor-pointer transition-shadow ${memory.colSpanClass} ${memory.offsetClass}`}
-            style={{ perspective: 1000 }}
-          >
-            <div className="relative aspect-4/3 w-full overflow-hidden bg-[#FFFBF9] rounded-sm mb-4 border border-[#F2E5E3]/20">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={memory.localUrl}
-                alt={memory.caption}
-                loading="lazy"
-                className="w-full h-full object-cover transition-all duration-500 filter-[grayscale(15%)] hover:filter-[grayscale(0%)]"
-                onError={(e) => {
-                  const img = e.currentTarget;
-                  if (img.src !== memory.fallbackUrl) {
-                    img.src = memory.fallbackUrl;
-                  }
-                }}
-              />
-            </div>
-
-            <div className="px-1 flex flex-col gap-2">
-              <p className="font-cursive text-2xl text-[#2A1F1D]/90 leading-tight">
-                {memory.caption}
-              </p>
-              <div className="flex justify-between items-center border-t border-[#F2E5E3]/40 pt-2">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[#2A1F1D]/60">
-                  {memory.date}
-                </span>
-                <span className="font-mono text-[9px] text-[#2A1F1D]/40 uppercase tracking-widest">
-                  No. 00{memory.id}
-                </span>
-              </div>
-            </div>
-          </div>
+            variant="gallery"
+          />
         ))}
+      </div>
       </div>
 
       {/* Lightbox foto */}
       {selected && (
         <div
-          className="fixed inset-0 z-70 flex items-center justify-center p-6 bg-[#170E0D]/80 backdrop-blur-sm animate-fade-in"
+          className="glass-surface fixed inset-0 z-70 flex items-center justify-center p-6 animate-fade-in"
           onClick={() => setSelected(null)}
           role="dialog"
           aria-modal="true"
@@ -216,16 +493,16 @@ export default function MemoryLane() {
             type="button"
             aria-label="Tutup foto"
             onClick={() => setSelected(null)}
-            className="absolute top-6 right-6 w-11 h-11 rounded-full bg-[#FFFBF9]/90 border border-[#F2E5E3] flex items-center justify-center text-[#2A1F1D]/70 hover:text-[#2A1F1D] hover:bg-white shadow-md active:scale-95 transition-all"
+            className="focus-ring absolute top-6 right-6 w-11 h-11 rounded-full bg-background/90 border border-accent/20 flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-surface shadow-elevation-1 active:scale-95 transition-spring duration-300"
           >
-            <X size={18} weight="bold" />
+            <XIcon size={18} weight="bold" />
           </button>
 
           <figure
-            className="animate-zoom-in bg-white p-4 pb-6 rounded-sm shadow-2xl max-w-lg w-full"
+            className="animate-zoom-in bg-surface p-4 pb-6 rounded-card shadow-elevation-3 max-w-lg w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative aspect-4/3 w-full overflow-hidden bg-[#FFFBF9] rounded-sm mb-4 border border-[#F2E5E3]/30">
+            <div className="relative aspect-4/3 w-full overflow-hidden bg-background rounded-inner mb-4 border border-accent/15">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={selected.localUrl}
@@ -241,14 +518,14 @@ export default function MemoryLane() {
             </div>
 
             <figcaption className="px-1 flex flex-col gap-2">
-              <p className="font-cursive text-3xl text-[#2A1F1D]/90 leading-tight">
+              <p className="font-cursive text-3xl text-foreground/90 leading-tight">
                 {selected.caption}
               </p>
-              <div className="flex justify-between items-center border-t border-[#F2E5E3]/40 pt-2">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[#2A1F1D]/60">
+              <div className="flex justify-between items-center border-t border-accent/20 pt-2">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-foreground/60">
                   {selected.date}
                 </span>
-                <span className="font-mono text-[9px] text-[#2A1F1D]/40 uppercase tracking-widest">
+                <span className="font-mono text-[9px] text-foreground/40 uppercase tracking-widest">
                   No. 00{selected.id}
                 </span>
               </div>

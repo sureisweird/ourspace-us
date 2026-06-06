@@ -6,16 +6,113 @@
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* ── Warna terkendali (R1.1) ──────────────────────────────────
+     Maks. dua aksen + satu surface, di atas latar netral + teks utama.
+     Kontras teks body (#2A1F1D di atas #FFFBF9 / #FFFFFF) ≈ 14:1,
+     jauh melampaui ambang 4.5:1 (R10.4). */
+  --color-background: var(--background);   /* #FFFBF9 — latar netral hangat */
+  --color-foreground: var(--foreground);   /* #2A1F1D — teks utama          */
+  --color-surface: #FFFFFF;                 /* satu warna permukaan (kartu)  */
+  --color-accent: #E5989B;                  /* aksen 1 — rose primer (CTA)   */
+  --color-accent-strong: #B56576;           /* aksen 2 — rose pekat          */
+
+  /* ── Skala tipografi ≥5 tingkat (R1.2) ────────────────────────
+     Tersedia sebagai utility: text-display, text-heading, dst.
+     Gaya "San Francisco-like": sans tegas + tracking rapat (R1.5). */
+  --text-display: clamp(2.5rem, 6vw, 4.5rem);
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.02em;
+  --text-display--font-weight: 700;
+
+  --text-heading: clamp(2rem, 4vw, 3rem);
+  --text-heading--line-height: 1.1;
+  --text-heading--letter-spacing: -0.015em;
+  --text-heading--font-weight: 700;
+
+  --text-subheading: clamp(1.375rem, 2.5vw, 1.875rem);
+  --text-subheading--line-height: 1.2;
+  --text-subheading--letter-spacing: -0.01em;
+  --text-subheading--font-weight: 600;
+
+  --text-body: 1.0625rem;
+  --text-body--line-height: 1.6;
+
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.4;
+  --text-caption--letter-spacing: 0.01em;
+
+  /* ── Skala spacing (R1.3) — utility: p-section, gap-block, dst. */
+  --spacing-section: 6rem;   /* jarak antar-section yang lapang */
+  --spacing-block: 2.5rem;   /* jarak antar-blok dalam section  */
+  --spacing-inline: 1.25rem; /* jarak inline / padding kartu     */
+
+  /* ── Skala radius (R1.3) — utility: rounded-pill, rounded-card. */
+  --radius-pill: 9999px;     /* tombol bergaya Apple (full)     */
+  --radius-card: 1.5rem;     /* sudut kartu                      */
+  --radius-inner: 0.75rem;   /* elemen di dalam kartu            */
+
+  /* ── Bayangan berlapis ≥3 tingkat (R1.4) — utility: shadow-elevation-2. */
+  --shadow-elevation-1:
+    0 1px 2px rgba(42, 31, 29, 0.04),
+    0 2px 8px rgba(42, 31, 29, 0.06);
+  --shadow-elevation-2:
+    0 4px 20px rgba(42, 31, 29, 0.06),
+    0 12px 40px rgba(42, 31, 29, 0.08);
+  --shadow-elevation-3:
+    0 12px 32px rgba(42, 31, 29, 0.08),
+    0 32px 80px rgba(42, 31, 29, 0.12);
+
+  /* ── Blur untuk Frosted_Glass (R2.1) — utility: backdrop-blur-glass. */
+  --blur-glass: 16px;
+
+  /* ── Easing default bergaya Apple "spring" (R9.1) ─────────────────
+     Kurva ease-out halus untuk transisi masuk & mikro-interaksi.
+     Diekspos sebagai utility Tailwind `ease-spring` dan CSS var
+     `--ease-spring` agar komponen bisa memakainya secara konsisten. */
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ── Font (sudah ada — dipertahankan) ─────────────────────────── */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-cursive: var(--font-dancing-script);
 }
 
-/* FIX #9: Smooth scroll untuk semua anchor link (#memories, #milestones, #letter) */
+/* ──────────────────────────────────────────────────────────────────
+   Utilitas styling Sistem_Desain (Tailwind v4 @utility)
+   ────────────────────────────────────────────────────────────────── */
+
+/* Frosted_Glass dasar (R2.1): latar semi-transparan + backdrop blur +
+   border tipis. Dipakai oleh Navigasi, kartu PinGate, latar Lightbox, dst.
+   Warna diturunkan dari Token_Desain (surface + foreground) agar tetap
+   konsisten dengan Sistem_Desain. */
+@utility glass-surface {
+  background-color: color-mix(in srgb, var(--color-surface) 65%, transparent);
+  backdrop-filter: blur(var(--blur-glass)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(140%);
+  border: 1px solid color-mix(in srgb, var(--color-foreground) 8%, transparent);
+}
+
+/* Indikator fokus keyboard terlihat (R10.5). Hanya tampil pada
+   :focus-visible agar tidak mengganggu interaksi pointer/mouse.
+   Dipakai pada elemen interaktif (tombol, tautan, kartu, input). */
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--color-accent-strong);
+    outline-offset: 2px;
+    border-radius: var(--radius-inner);
+  }
+}
+
+/* Easing default "spring" sebagai utility transisi siap pakai (R9.1).
+   Komponen cukup menambahkan kelas `transition-spring` untuk memakai
+   kurva ease-out standar pada transisi masuk & mikro-interaksi. */
+@utility transition-spring {
+  transition-timing-function: var(--ease-spring);
+}
+
 html {
   scroll-behavior: smooth;
+  max-width: 100%;
   overflow-x: hidden;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
@@ -29,6 +126,14 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  max-width: 100%;
+  overflow-x: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+body::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
 }
 
 @keyframes float-leaf {
@@ -67,9 +172,19 @@ body {
   animation: pulse-slow 12s ease-in-out infinite;
 }
 
-/* FIX: animasi untuk pesan error PinGate. Sebelumnya class `animate-fade-in`
-   dipakai tapi keyframe-nya tidak pernah didefinisikan (bukan utilitas bawaan
-   Tailwind v4), sehingga efek fade tidak muncul. */
+@keyframes pulse-solid {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-solid {
+  animation: pulse-solid 12s ease-in-out infinite;
+}
+
 @keyframes fade-in {
   0% {
     opacity: 0;
@@ -140,9 +255,6 @@ body {
   }
 }
 
-/* Grain / noise halus di seluruh background untuk kesan "mahal".
-   Pakai pseudo-element fixed agar menutup viewport tanpa mengganggu layout,
-   pointer-events:none supaya tidak menghalangi interaksi. */
 body::after {
   content: "";
   position: fixed;
@@ -156,9 +268,26 @@ body::after {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* Matikan SEMUA animasi ambient berulang berbasis CSS/keyframe (R9.3, R13.8):
+     daun mengambang, denyut lambat, ayunan dekorasi bunga, dan bounce sparkle. */
   .animate-sway,
   .animate-leaf,
-  .animate-pulse-slow {
-    animation: none;
+  .animate-pulse-slow,
+  .animate-bounce,
+  .animate-fade-in,
+  .animate-zoom-in,
+  .animate-blink {
+    animation: none !important;
   }
+
+  /* Equalizer mini iPod (eq-bounce) di-set via inline style `animation`,
+     jadi dimatikan lewat selector atribut + !important agar override. */
+  [style*="eq-bounce"] {
+    animation: none !important;
+  }
+
+  /* Catatan: rotasi vinyl dijalankan via GSAP (transform inline), sehingga
+     dihentikan di tingkat komponen lewat pemeriksaan prefers-reduced-motion
+     (pola `reducedMotion` di MusicLetterFooter). CSS di sini menjamin seluruh
+     animasi ambient berbasis CSS/keyframe ikut dinonaktifkan. */
 }

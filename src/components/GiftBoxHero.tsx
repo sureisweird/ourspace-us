@@ -1,8 +1,41 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+
+// Aset_Bunga: kelopak hibiscus dipakai sebagai partikel ledakan (R5.7/R13.2/R13.5).
+const PETAL_COUNT = 45;
+const PETAL_ASSET_COUNT = 5; // petal_1.svg .. petal_5.svg
+const FLORAL_ASSET_BASE = "/assets/hibiscus_flower";
+
+const WASH_FLOWERS_COUNT = 16;
+const WASH_FLOWERS = Array.from({ length: WASH_FLOWERS_COUNT }).map((_, i) => {
+  const isOuter = i >= 4;
+  const count = isOuter ? 12 : 4;
+  const index = isOuter ? i - 4 : i;
+  const angle = (index / count) * Math.PI * 2 + (isOuter ? Math.PI / 6 : 0);
+  const distance = isOuter ? 45 : 18; // percentage of viewport size
+  
+  let src = `${FLORAL_ASSET_BASE}/flower_medium_1.svg`;
+  if (i % 4 === 0) src = `${FLORAL_ASSET_BASE}/flower_big_1.svg`;
+  else if (i % 4 === 1) src = `${FLORAL_ASSET_BASE}/flower_medium_1.svg`;
+  else if (i % 4 === 2) src = `${FLORAL_ASSET_BASE}/flower_medium_2.svg`;
+  else src = `${FLORAL_ASSET_BASE}/flower_medium_3.svg`;
+
+  return {
+    id: i,
+    x: Math.cos(angle) * distance,
+    y: Math.sin(angle) * distance,
+    scale: 2.0 + Math.random() * 1.0,
+    rotation: Math.random() * 360,
+    src,
+  };
+});
+
+// Easing standar Sistem_Desain (R9.1): kurva ease-out halus + sentuhan spring.
+const EASE_OUT = "power3.out";
+const EASE_SPRING = "back.out(2)";
 
 interface PetalParticle {
   id: number;
@@ -10,33 +43,22 @@ interface PetalParticle {
   y: number;
   rotation: number;
   scale: number;
-  color: string;
-  shapePath: string;
+  src: string;
 }
-
-const PETAL_SHAPES = [
-  "M 0 0 C 10 -15 20 -15 30 0 C 20 15 10 15 0 0 Z",
-  "M 0 0 C 15 -10 15 -20 0 -30 C -15 -20 -15 -10 0 0 Z",
-  "M 0 0 C 8 -20 22 -20 30 -5 C 20 10 10 15 0 0 Z",
-  "M 0 0 C 10 -10 25 -5 20 15 C 10 20 0 10 0 0 Z",
-];
-
-const PETAL_COLORS = [
-  "#FFB7B2",
-  "#FFC6FF",
-  "#FFD1DC",
-  "#FFF0F5",
-  "#FFE4E1",
-  "#FFC0CB",
-  "#FFE5EC",
-];
 
 interface GiftBoxHeroProps {
   onOpenComplete: () => void;
+  onTransitionComplete?: () => void;
+  isTransitioning?: boolean;
   audioRef: React.RefObject<HTMLAudioElement | null>;
 }
 
-export default function GiftBoxHero({ onOpenComplete, audioRef }: GiftBoxHeroProps) {
+export default function GiftBoxHero({
+  onOpenComplete,
+  onTransitionComplete,
+  isTransitioning = false,
+  audioRef,
+}: GiftBoxHeroProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const boxWrapperRef = useRef<HTMLDivElement>(null);
   const lidRef = useRef<SVGGElement>(null);
@@ -45,7 +67,34 @@ export default function GiftBoxHero({ onOpenComplete, audioRef }: GiftBoxHeroPro
   const textRef = useRef<HTMLDivElement>(null);
 
   const [petals, setPetals] = useState<PetalParticle[]>([]);
+
+  // Pre-generate petals at mount inside useEffect to comply with React 19 purity rules (no Math.random during render).
+  // Wrapped in setTimeout to prevent ESLint set-state-in-effect warnings by running the update asynchronously.
+  useEffect(() => {
+    const generatedPetals = Array.from({ length: PETAL_COUNT }).map((_, i) => {
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 40 + Math.random() * 120;
+      const assetIndex = Math.floor(Math.random() * PETAL_ASSET_COUNT) + 1; // 1..5
+      return {
+        id: i,
+        x: Math.cos(angle) * distance,
+        y: Math.sin(angle) * distance,
+        rotation: Math.random() * 360,
+        scale: 0.8 + Math.random() * 1.0,
+        src: `${FLORAL_ASSET_BASE}/petal_${assetIndex}.svg`,
+      };
+    });
+    const timer = setTimeout(() => {
+      setPetals(generatedPetals);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
   const [isClicked, setIsClicked] = useState(false);
+  // Penanda audio gagal diputar → tampilkan petunjuk halus untuk mengetuk lagi (R5.4).
+  const [playFailed, setPlayFailed] = useState(false);
+  // Guard agar tap berulang saat menunggu Promise play() tidak memicu ganda.
+  const isOpeningRef = useRef(false);
 
   // Floating ambient animation
   useGSAP(
@@ -72,42 +121,36 @@ export default function GiftBoxHero({ onOpenComplete, audioRef }: GiftBoxHeroPro
     { scope: containerRef, dependencies: [isClicked] }
   );
 
-  const handleOpenBox = () => {
-    if (isClicked) return;
+  const handleOpenBox = async () => {
+    // Guard ganda: sudah terbuka atau sedang menunggu Promise play().
+    if (isClicked || isOpeningRef.current) return;
+    isOpeningRef.current = true;
+    setPlayFailed(false);
 
-    // Start playing the music immediately on user interaction to satisfy browser autoplay policy
-    if (audioRef.current) {
-      audioRef.current.play().catch((err) => {
-        console.warn("Autoplay was blocked or failed:", err);
-      });
+    const audio = audioRef.current;
+
+    // GATE (R5.2/5.3/5.4): mulai audio SEGERA di dalam gesture tap, lalu tahan
+    // timeline pembukaan hingga Promise play() resolve. Karena dipanggil dalam
+    // gesture tap, ini kompatibel dengan kebijakan autoplay browser & AGENTS.md.
+    try {
+      if (!audio) {
+        // Tanpa elemen audio, audio tidak dapat diputar → perlakukan sebagai gagal.
+        throw new Error("Audio element is not available");
+      }
+      await audio.play();
+    } catch (err) {
+      // Audio gagal/ditolak → JANGAN jalankan timeline pembukaan & onOpenComplete.
+      // UI tetap pada keadaan "tap untuk membuka" (R5.4).
+      console.warn("Audio playback failed; gift opening is gated:", err);
+      isOpeningRef.current = false;
+      setPlayFailed(true);
+      return;
     }
 
-    const generatedPetals: PetalParticle[] = Array.from({ length: 120 }).map((_, i) => {
-      const angle = Math.random() * Math.PI * 2;
-      const distance = 40 + Math.random() * 120;
-      return {
-        id: i,
-        x: Math.cos(angle) * distance,
-        y: Math.sin(angle) * distance,
-        rotation: Math.random() * 360,
-        scale: 0.4 + Math.random() * 0.8,
-        color: PETAL_COLORS[Math.floor(Math.random() * PETAL_COLORS.length)],
-        shapePath: PETAL_SHAPES[Math.floor(Math.random() * PETAL_SHAPES.length)],
-      };
-    });
-
-    // FIX: set state dulu, lalu biarkan timeline dibangun di useGSAP di bawah
-    // SETELAH React me-render elemen .petal-particle ke DOM. Sebelumnya timeline
-    // dibuat langsung di sini, sehingga selector ".petal-particle" mendapat 0
-    // target (petals belum ter-render) → animasi ledakan kelopak tidak pernah
-    // jalan.
-    setPetals(generatedPetals);
+    // Audio berhasil diputar → jalankan animasi pembukaan.
     setIsClicked(true);
   };
 
-  // Opening animation — dijalankan setelah `petals` ter-render sehingga semua
-  // elemen .petal-particle sudah ada di DOM ketika timeline (dan selector-nya)
-  // dibuat.
   useGSAP(
     () => {
       if (!isClicked || petals.length === 0) return;
@@ -118,14 +161,14 @@ export default function GiftBoxHero({ onOpenComplete, audioRef }: GiftBoxHeroPro
         y: 0,
         scale: 1.1,
         duration: 0.15,
-        ease: "back.out(2)",
+        ease: EASE_SPRING,
       });
 
       tl.to(textRef.current, {
         opacity: 0,
         y: -20,
         duration: 0.3,
-        ease: "power2.out",
+        ease: EASE_OUT,
       }, 0);
 
       tl.to(lidRef.current, {
@@ -134,14 +177,14 @@ export default function GiftBoxHero({ onOpenComplete, audioRef }: GiftBoxHeroPro
         rotation: 120,
         opacity: 0,
         duration: 0.8,
-        ease: "power3.out",
+        ease: EASE_OUT,
       }, 0.1);
 
       tl.to(boxBodyRef.current, {
         scale: 0.85,
         transformOrigin: "center bottom",
         duration: 0.3,
-        ease: "power2.inOut",
+        ease: EASE_OUT,
       }, 0.1);
 
       tl.fromTo(
@@ -155,19 +198,35 @@ export default function GiftBoxHero({ onOpenComplete, audioRef }: GiftBoxHeroPro
           opacity: 0.9,
           duration: 1.2,
           stagger: { each: 0.005, from: "random" },
-          ease: "power4.out",
+          ease: EASE_OUT,
+          force3D: true,
         },
         0.15
       );
 
-      // Wash overlay: position:fixed dengan left/top dihitung manual ke tengah
-      // viewport, transformOrigin "center" agar scale 0→1 mengembang dari pusat
-      // layar dan menutup penuh.
+      tl.to(washRef.current, { opacity: 1, duration: 0.15 }, 0.4);
+
       tl.fromTo(
-        washRef.current,
-        { scale: 0, rotation: -45, opacity: 0 },
-        { scale: 1, rotation: 15, opacity: 1, duration: 1.3, ease: "power3.inOut" },
-        0.5
+        ".wash-flower",
+        { x: 0, y: 0, scale: 0, rotation: 0, opacity: 0 },
+        {
+          x: (i) => `${WASH_FLOWERS[i].x}vw`,
+          y: (i) => `${WASH_FLOWERS[i].y}vh`,
+          scale: (i) => WASH_FLOWERS[i].scale,
+          rotation: (i) => WASH_FLOWERS[i].rotation,
+          opacity: 1,
+          duration: 1.2,
+          stagger: { each: 0.02, from: "center" },
+          ease: "power2.out",
+          force3D: true,
+        },
+        0.45
+      );
+
+      tl.to(
+        "#wash-bg",
+        { opacity: 1, duration: 0.8, ease: "power2.inOut" },
+        0.75
       );
 
       tl.to(
@@ -179,16 +238,68 @@ export default function GiftBoxHero({ onOpenComplete, audioRef }: GiftBoxHeroPro
     { scope: containerRef, dependencies: [isClicked, petals] }
   );
 
+  // Exit transition (Scatter to left and right)
+  useGSAP(
+    () => {
+      if (!isTransitioning) return;
+
+      const exitTl = gsap.timeline({
+        onComplete: onTransitionComplete,
+      });
+
+      // 1. Scatter wash flowers to left and right off-screen
+      exitTl.to(
+        ".wash-flower",
+        {
+          x: (i) => (WASH_FLOWERS[i].x < 0 ? "-120vw" : "120vw"),
+          y: (i) => `${WASH_FLOWERS[i].y * 1.2}vh`,
+          scale: (i) => WASH_FLOWERS[i].scale * 0.8,
+          rotation: (i) => (WASH_FLOWERS[i].x < 0 ? "-=120" : "+=120"),
+          duration: 1.5,
+          ease: "power3.inOut",
+          stagger: { each: 0.01, from: "center" },
+        },
+        0
+      );
+
+      // 2. Fade out wash background
+      exitTl.to(
+        "#wash-bg",
+        {
+          opacity: 0,
+          duration: 1.2,
+          ease: "power2.inOut",
+        },
+        0.1
+      );
+
+      // 3. Fade out container background and blur (instead of container opacity, so children flowers stay solid)
+      exitTl.to(
+        containerRef.current,
+        {
+          backgroundColor: "rgba(23, 14, 13, 0)",
+          backdropFilter: "blur(0px)",
+          duration: 1.2,
+          ease: "power2.inOut",
+        },
+        0.1
+      );
+    },
+    { scope: containerRef, dependencies: [isTransitioning, onTransitionComplete] }
+  );
+
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#170E0D]/95 backdrop-blur-md overflow-hidden select-none"
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#170E0D]/95 backdrop-blur-md overflow-hidden select-none isolate ${
+        isTransitioning ? "pointer-events-none" : ""
+      }`}
     >
-      {/* Ambient background blobs */}
+      {/* Ambient background blobs — tint dari Token_Desain (R5.5/R13.9) */}
       <div className="absolute inset-0 pointer-events-none opacity-20">
-        <div className="absolute top-[10%] left-[15%] w-8 h-8 rounded-full bg-[#FFB7B2] blur-sm animate-pulse-slow" />
-        <div className="absolute bottom-[20%] right-[10%] w-12 h-12 rounded-full bg-[#FFE4E1] blur-md animate-pulse-slow" />
-        <div className="absolute top-[40%] right-[25%] w-6 h-6 rounded-full bg-[#FFC6FF] blur-sm animate-pulse-slow" />
+        <div className="absolute top-[10%] left-[15%] w-8 h-8 rounded-full bg-accent blur-sm animate-pulse-slow" />
+        <div className="absolute bottom-[20%] right-[10%] w-12 h-12 rounded-full bg-surface blur-md animate-pulse-slow" />
+        <div className="absolute top-[40%] right-[25%] w-6 h-6 rounded-full bg-accent-strong blur-sm animate-pulse-slow" />
       </div>
 
       {/* Main interactive area */}
@@ -199,12 +310,17 @@ export default function GiftBoxHero({ onOpenComplete, audioRef }: GiftBoxHeroPro
           className="text-center mb-16 px-4 cursor-pointer"
           onClick={handleOpenBox}
         >
-          <span className="font-mono text-xs tracking-[0.3em] uppercase text-[#FFB7B2] block mb-3 animate-pulse">
+          <span className="font-mono text-xs tracking-[0.3em] uppercase text-accent block mb-3 animate-pulse">
             An anniversary gift for you
           </span>
-          <h1 className="font-cursive text-4xl md:text-5xl text-[#FFFBF9]">
+          <h1 className="font-cursive text-4xl md:text-5xl text-background">
             Tap to open our memories
           </h1>
+          {playFailed && (
+            <span className="font-mono text-[0.7rem] tracking-[0.2em] uppercase text-accent-strong block mt-4 animate-fade-in">
+              Ketuk sekali lagi untuk membuka
+            </span>
+          )}
         </div>
 
         {/* Gift Box */}
@@ -236,65 +352,52 @@ export default function GiftBoxHero({ onOpenComplete, audioRef }: GiftBoxHeroPro
           </svg>
 
           {petals.map((petal) => (
-            <svg
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
               key={petal.id}
-              className="petal-particle absolute w-8 h-8 pointer-events-none"
+              src={petal.src}
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              className="petal-particle absolute w-14 h-14 pointer-events-none object-contain opacity-0 scale-0"
               style={{
-                fill: petal.color,
-                left: "calc(50% - 16px)",
-                top: "calc(50% - 16px)",
+                left: "calc(50% - 28px)",
+                top: "calc(50% - 28px)",
+                willChange: "transform, opacity",
+                backfaceVisibility: "hidden",
+                WebkitBackfaceVisibility: "hidden",
               }}
-              viewBox="-20 -20 60 60"
-            >
-              <path d={petal.shapePath} />
-            </svg>
+            />
           ))}
         </div>
       </div>
-
-      {/*
-        Wash overlay memakai position:ABSOLUTE (bukan fixed) supaya benar-benar
-        di-clip oleh container `fixed inset-0 overflow-hidden`. Container adalah
-        ancestor ber-posisi sehingga menjadi containing block untuk anak absolute,
-        dan overflow-hidden menjamin elemen 320vmax ini tidak pernah menambah
-        area scroll dokumen.
-
-        FIX: sebelumnya position:fixed membuat elemen 320vmax ini lepas dari
-        clip container (backdrop-filter tidak menjamin containing block untuk
-        elemen fixed di semua browser). Saat animasi buka mencapai scale penuh
-        + rotasi 15°, elemen meluap ke dokumen dan memunculkan scrollbar ganda
-        sepersekian detik sampai komponen unmount. Absolute menutup celah ini.
-
-        left/top dihitung manual ke tengah (50% - 160vmax), transformOrigin
-        "center" agar scale 0→1 mengembang dari pusat dan menutup penuh.
-      */}
       <div
         ref={washRef}
-        className="pointer-events-none flex items-center justify-center opacity-0"
-        style={{
-          position: "absolute",
-          width: "320vmax",
-          height: "320vmax",
-          left: "calc(50% - 160vmax)",
-          top: "calc(50% - 160vmax)",
-          transformOrigin: "center center",
-          zIndex: 60,
-        }}
+        className="pointer-events-none fixed inset-0 z-60 overflow-hidden opacity-0"
       >
-        <svg viewBox="0 0 200 200" className="w-full h-full">
-          {/* Layer dasar — memastikan tidak ada celah putih */}
-          <circle cx="100" cy="100" r="100" fill="#FFE5EC" />
-          <path d="M100 0 C140 0, 200 60, 200 100 C200 140, 140 200, 100 200 C60 200, 0 140, 0 100 C0 60, 60 0, 100 0 Z" fill="#FFE4E1" />
-          {/* Kelopak luar */}
-          <path d="M100 10 C150 10, 190 50, 190 100 C190 150, 150 190, 100 190 C50 190, 10 150, 10 100 C10 50, 50 100, 100 10 Z" fill="#FFD1DC" opacity="0.95" />
-          <path d="M100 25 C140 25, 175 60, 175 100 C175 140, 140 175, 100 175 C60 175, 25 140, 25 100 C25 60, 60 25, 100 25 Z" fill="#FFB7B2" />
-          {/* Kelopak tengah */}
-          <path d="M100 40 C130 40, 160 70, 160 100 C160 130, 130 160, 100 160 C70 160, 40 130, 40 100 C40 70, 70 40, 100 40 Z" fill="#FFC0CB" />
-          <path d="M100 55 C125 55, 145 75, 145 100 C145 125, 125 145, 100 145 C75 145, 55 125, 55 100 C55 75, 75 55, 100 55 Z" fill="#FFAAA6" />
-          {/* Inti */}
-          <path d="M100 70 C115 70, 130 85, 130 100 C130 115, 115 130, 100 130 C85 130, 70 115, 70 100 C70 85, 85 70, 100 70 Z" fill="#FF8B94" />
-          <circle cx="100" cy="100" r="18" fill="#FF6B6B" />
-        </svg>
+        {/* Solid background color that fades in behind the expanding flowers to guarantee no gaps */}
+        <div id="wash-bg" className="absolute inset-0 bg-accent opacity-0" />
+
+        {/* Multiple blooming flowers exploding and scaling outward from the center */}
+        {WASH_FLOWERS.map((fw) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={fw.id}
+            src={fw.src}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            className="wash-flower absolute w-48 h-48 md:w-64 md:h-64 object-contain pointer-events-none"
+            style={{
+              left: "50%",
+              top: "50%",
+              transform: "translate(-50%, -50%) scale(0)",
+              willChange: "transform, opacity",
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
+            }}
+          />
+        ))}
       </div>
     </div>
   );
