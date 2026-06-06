@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { Heart, X } from "@phosphor-icons/react";
+import { HeartIcon, XIcon } from "@phosphor-icons/react";
 
 interface PolaroidItem {
   id: number;
@@ -14,6 +14,13 @@ interface PolaroidItem {
   colSpanClass: string;
   offsetClass: string;
 }
+
+// Bayangan berlapis (Token_Desain) sebagai literal agar dapat diinterpolasi GSAP.
+// Mengacu pada --shadow-elevation-* di globals.css.
+const SHADOW_REST =
+  "0 4px 12px rgba(42, 31, 29, 0.08), 0 12px 32px rgba(42, 31, 29, 0.10)"; // elevation-2
+const SHADOW_HOVER =
+  "0 8px 24px rgba(42, 31, 29, 0.10), 0 24px 60px rgba(42, 31, 29, 0.14)"; // elevation-3
 
 const MEMORIES: PolaroidItem[] = [
   {
@@ -88,26 +95,40 @@ export default function MemoryLane() {
     () => {
       const cards = gsap.utils.toArray<HTMLElement>(".polaroid-card");
 
+      // Hormati Gerak_Tereduksi: matikan float ambient berulang, tampilkan
+      // keadaan akhir statis. Umpan balik elevation hover tetap dipertahankan.
+      const prefersReduced =
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
       cards.forEach((card) => {
         const initialRotation = gsap.utils.random(-5, 5);
-        gsap.set(card, { rotation: initialRotation, transformOrigin: "center center" });
-
-        const floatTween = gsap.to(card, {
-          y: () => `+=${gsap.utils.random(-8, 8)}`,
-          x: () => `+=${gsap.utils.random(-4, 4)}`,
-          duration: gsap.utils.random(4, 6),
-          repeat: -1,
-          yoyo: true,
-          ease: "sine.inOut",
+        gsap.set(card, {
+          rotation: initialRotation,
+          transformOrigin: "center center",
+          boxShadow: SHADOW_REST,
         });
 
+        // Float ambient hanya saat gerak tidak direduksi (R9.3)
+        const floatTween = prefersReduced
+          ? null
+          : gsap.to(card, {
+              y: () => `+=${gsap.utils.random(-8, 8)}`,
+              x: () => `+=${gsap.utils.random(-4, 4)}`,
+              duration: gsap.utils.random(4, 6),
+              repeat: -1,
+              yoyo: true,
+              ease: "sine.inOut",
+            });
+
+        // Umpan balik kedalaman (elevation) saat hover ≤500ms (R6.2)
         card.addEventListener("mouseenter", () => {
-          floatTween.pause();
+          floatTween?.pause();
           gsap.to(card, {
             scale: 1.05,
             rotation: gsap.utils.random(-1, 1),
             z: 20,
-            boxShadow: "0 25px 50px -12px rgba(42,31,29,0.15)",
+            boxShadow: SHADOW_HOVER,
             duration: 0.4,
             ease: "power2.out",
           });
@@ -118,10 +139,10 @@ export default function MemoryLane() {
             scale: 1,
             rotation: initialRotation,
             z: 0,
-            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.02)",
+            boxShadow: SHADOW_REST,
             duration: 0.5,
             ease: "power2.out",
-            onComplete: () => floatTween.resume(),
+            onComplete: () => floatTween?.resume(),
           });
         });
       });
@@ -133,21 +154,21 @@ export default function MemoryLane() {
     <section
       ref={containerRef}
       id="memories"
-      className="py-32 px-6 max-w-7xl mx-auto relative z-10"
+      className="py-32 px-6 max-w-7xl mx-auto relative z-10 overflow-hidden"
     >
       {/* Section Header */}
       <div className="max-w-xl mb-24">
         <div className="flex items-center gap-2 mb-4">
-          <Heart size={16} weight="fill" className="text-[#FFB7B2]" />
-          <span className="font-mono text-xs tracking-[0.25em] uppercase text-[#2A1F1D]/65">
+          <HeartIcon size={16} weight="fill" className="text-accent" />
+          <span className="font-mono text-xs tracking-[0.25em] uppercase text-foreground/65">
             Chapter I
           </span>
         </div>
-        <h2 className="text-4xl md:text-5xl font-sans tracking-tight font-light mb-6 text-[#2A1F1D] leading-tight">
+        <h2 className="text-4xl md:text-5xl font-sans tracking-tight font-light mb-6 text-foreground leading-tight">
           A physical archive <br />
-          of our <span className="font-cursive text-5xl md:text-6xl text-[#E5989B]">sweetest moments</span>.
+          of our <span className="font-cursive text-5xl md:text-6xl text-accent">sweetest moments</span>.
         </h2>
-        <p className="text-[#2A1F1D]/80 text-sm leading-relaxed max-w-[45ch]">
+        <p className="text-foreground/80 text-sm leading-relaxed max-w-[45ch]">
           Polaroid snapshots from our journey together. Hover over them to take a closer look at our favorite days.
         </p>
       </div>
@@ -167,10 +188,10 @@ export default function MemoryLane() {
                 setSelected(memory);
               }
             }}
-            className={`polaroid-card bg-white p-4 pb-6 rounded-sm shadow-md border border-[#F2E5E3]/40 flex flex-col justify-between h-fit cursor-pointer transition-shadow ${memory.colSpanClass} ${memory.offsetClass}`}
+            className={`polaroid-card focus-ring bg-surface p-4 pb-6 rounded-card shadow-elevation-2 border border-accent/20 flex flex-col justify-between h-fit cursor-pointer transition-spring duration-500 ${memory.colSpanClass} ${memory.offsetClass}`}
             style={{ perspective: 1000 }}
           >
-            <div className="relative aspect-4/3 w-full overflow-hidden bg-[#FFFBF9] rounded-sm mb-4 border border-[#F2E5E3]/20">
+            <div className="relative aspect-4/3 w-full overflow-hidden bg-background rounded-inner mb-4 border border-accent/15">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={memory.localUrl}
@@ -187,14 +208,14 @@ export default function MemoryLane() {
             </div>
 
             <div className="px-1 flex flex-col gap-2">
-              <p className="font-cursive text-2xl text-[#2A1F1D]/90 leading-tight">
+              <p className="font-cursive text-2xl text-foreground/90 leading-tight">
                 {memory.caption}
               </p>
-              <div className="flex justify-between items-center border-t border-[#F2E5E3]/40 pt-2">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[#2A1F1D]/60">
+              <div className="flex justify-between items-center border-t border-accent/20 pt-2">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-foreground/60">
                   {memory.date}
                 </span>
-                <span className="font-mono text-[9px] text-[#2A1F1D]/40 uppercase tracking-widest">
+                <span className="font-mono text-[9px] text-foreground/40 uppercase tracking-widest">
                   No. 00{memory.id}
                 </span>
               </div>
@@ -206,7 +227,7 @@ export default function MemoryLane() {
       {/* Lightbox foto */}
       {selected && (
         <div
-          className="fixed inset-0 z-70 flex items-center justify-center p-6 bg-[#170E0D]/80 backdrop-blur-sm animate-fade-in"
+          className="glass-surface fixed inset-0 z-70 flex items-center justify-center p-6 animate-fade-in"
           onClick={() => setSelected(null)}
           role="dialog"
           aria-modal="true"
@@ -216,16 +237,16 @@ export default function MemoryLane() {
             type="button"
             aria-label="Tutup foto"
             onClick={() => setSelected(null)}
-            className="absolute top-6 right-6 w-11 h-11 rounded-full bg-[#FFFBF9]/90 border border-[#F2E5E3] flex items-center justify-center text-[#2A1F1D]/70 hover:text-[#2A1F1D] hover:bg-white shadow-md active:scale-95 transition-all"
+            className="focus-ring absolute top-6 right-6 w-11 h-11 rounded-full bg-background/90 border border-accent/20 flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-surface shadow-elevation-1 active:scale-95 transition-spring duration-300"
           >
-            <X size={18} weight="bold" />
+            <XIcon size={18} weight="bold" />
           </button>
 
           <figure
-            className="animate-zoom-in bg-white p-4 pb-6 rounded-sm shadow-2xl max-w-lg w-full"
+            className="animate-zoom-in bg-surface p-4 pb-6 rounded-card shadow-elevation-3 max-w-lg w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative aspect-4/3 w-full overflow-hidden bg-[#FFFBF9] rounded-sm mb-4 border border-[#F2E5E3]/30">
+            <div className="relative aspect-4/3 w-full overflow-hidden bg-background rounded-inner mb-4 border border-accent/15">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={selected.localUrl}
@@ -241,14 +262,14 @@ export default function MemoryLane() {
             </div>
 
             <figcaption className="px-1 flex flex-col gap-2">
-              <p className="font-cursive text-3xl text-[#2A1F1D]/90 leading-tight">
+              <p className="font-cursive text-3xl text-foreground/90 leading-tight">
                 {selected.caption}
               </p>
-              <div className="flex justify-between items-center border-t border-[#F2E5E3]/40 pt-2">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[#2A1F1D]/60">
+              <div className="flex justify-between items-center border-t border-accent/20 pt-2">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-foreground/60">
                   {selected.date}
                 </span>
-                <span className="font-mono text-[9px] text-[#2A1F1D]/40 uppercase tracking-widest">
+                <span className="font-mono text-[9px] text-foreground/40 uppercase tracking-widest">
                   No. 00{selected.id}
                 </span>
               </div>
