@@ -10,7 +10,9 @@ import PinGate from "@/components/PinGate";
 import GiftBoxHero from "@/components/GiftBoxHero";
 import MemoryLane from "@/components/MemoryLane";
 import SplitContent from "@/components/SplitContent";
-import MusicLetterFooter, { SONG_SRC } from "@/components/MusicLetterFooter";
+import MusicLetterFooter from "@/components/MusicLetterFooter";
+import { SONG_SRC, HERO_POLAROID, USE_API_PROXY } from "@/config/galleryConfig";
+import { CONFIG_PAGE } from "@/config/textConfig";
 import FloralDecor from "@/components/FloralDecor";
 import AmbientPetals from "@/components/AmbientPetals";
 import PolaroidCard from "@/components/PolaroidCard";
@@ -22,30 +24,39 @@ export default function Home() {
   const [giftTransitionComplete, setGiftTransitionComplete] = useState(false);
   const [readyToReveal, setReadyToReveal] = useState(false);
   const mainContentRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const themeColorMetaRef = useRef<HTMLMetaElement | null>(null);
 
-  // Sinkronkan warna chrome iOS (status bar & toolbar Safari) dengan stage agar
-  // tidak muncul "pita" krem di area sensitif: gelap saat pin/gift, krem saat main.
-  // Memakai createElement + ref (bukan document.querySelector) sesuai AGENTS.md.
+  // iOS mewarnai area di balik status bar/toolbar (pita atas-bawah) dengan warna
+  // <body>. Agar pita menyatu (tidak tampak terpotong) di stage gelap, samakan
+  // warna body/html dengan stage: gelap saat pin/gift, krem saat utama.
+  // Akses elemen langsung (bukan querySelector) sesuai AGENTS.md.
   useEffect(() => {
-    let meta = themeColorMetaRef.current;
-    if (!meta) {
-      meta = document.createElement("meta");
-      meta.name = "theme-color";
-      document.head.appendChild(meta);
-      themeColorMetaRef.current = meta;
+    if (stage !== "main") {
+      gsap.set([document.documentElement, document.body], {
+        backgroundColor: "#170E0D",
+      });
+      document.body.classList.add("stage-dark");
+    } else {
+      document.body.classList.remove("stage-dark");
     }
-    meta.content = stage === "main" ? "#FFFBF9" : "#170E0D";
   }, [stage]);
 
+  // Saat konten utama mulai terungkap, animasikan warna body gelap→krem dengan
+  // durasi/easing yang sinkron dengan animasi keluar GiftBox, sehingga pita ikut
+  // berubah mulus tanpa "flip" mendadak (penyebab bug transisi sebelumnya).
   useEffect(() => {
+    if (!readyToReveal) return;
+    const tween = gsap.to([document.documentElement, document.body], {
+      backgroundColor: "#FFFBF9",
+      duration: 1.2,
+      ease: "power2.inOut",
+    });
     return () => {
-      themeColorMetaRef.current?.remove();
-      themeColorMetaRef.current = null;
+      tween.kill();
     };
-  }, []);
+  }, [readyToReveal]);
 
   useGSAP(
     () => {
@@ -55,14 +66,13 @@ export default function Home() {
 
       gsap.fromTo(
         mainContentRef.current,
-        { opacity: 0, y: 40 },
+        { y: 40 },
         {
-          opacity: 1,
           y: 0,
           duration: 0.5,
           ease: "power3.out",
           delay: 0.1,
-          clearProps: "all",
+          clearProps: "transform",
           onComplete: () => {
             gsap.set(mainContentRef.current, { clearProps: "all" });
             document.body.style.overflow = prevBodyOverflow;
@@ -72,6 +82,14 @@ export default function Home() {
             });
           },
         }
+      );
+
+      // Fade hanya elemen above-the-fold (hero) agar tidak memaksa paint
+      // offscreen seukuran seluruh dokumen (penyebab utama frame drop saat masuk).
+      gsap.fromTo(
+        heroRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.5, ease: "power2.out", delay: 0.1, clearProps: "opacity" }
       );
 
       gsap.fromTo(
@@ -144,34 +162,25 @@ export default function Home() {
                   aria-hidden="true"
                 />
                 <span className="tracking-widest uppercase">
-                  OUR SPACE
+                  {CONFIG_PAGE.brandName}
                 </span>
               </div>
 
               <nav className="hidden md:flex items-center gap-10 text-xs font-mono text-foreground/70 tracking-wider">
-                <a
-                  href="#memories"
-                  className="focus-ring rounded-inner transition-colors duration-300 ease-spring hover:text-accent"
-                >
-                  01 / MEMORIES
-                </a>
-                <a
-                  href="#milestones"
-                  className="focus-ring rounded-inner transition-colors duration-300 ease-spring hover:text-accent"
-                >
-                  02 / MILESTONES
-                </a>
-                <a
-                  href="#letter"
-                  className="focus-ring rounded-inner transition-colors duration-300 ease-spring hover:text-accent"
-                >
-                  03 / LETTER
-                </a>
+                {CONFIG_PAGE.navLinks.map((link) => (
+                  <a
+                    key={link.id}
+                    href={link.id}
+                    className="focus-ring rounded-inner transition-colors duration-300 ease-spring hover:text-accent"
+                  >
+                    {link.label}
+                  </a>
+                ))}
               </nav>
 
               <div className="flex items-center gap-2 border border-foreground/10 bg-surface/70 px-4 py-2 rounded-full shadow-elevation-1 text-xs font-mono text-foreground/80 backdrop-blur-md">
                 <CalendarIcon size={14} weight="regular" className="text-accent" />
-                <span>Est. June 14</span>
+                <span>{CONFIG_PAGE.dateEst}</span>
               </div>
             </div>
           </header>
@@ -179,7 +188,7 @@ export default function Home() {
           {/* Main Content */}
           <main ref={mainContentRef} className="relative z-10">
             {/* Hero Intro - Split Layout */}
-            <section className="w-full min-h-dvh flex flex-col justify-center px-6 md:px-12 relative overflow-hidden pt-24 pb-12 lg:py-0">
+            <section ref={heroRef} className="w-full min-h-dvh flex flex-col justify-center px-6 md:px-12 relative overflow-hidden pt-24 pb-12 lg:py-0">
               <FloralDecor />
 
               <div
@@ -193,12 +202,12 @@ export default function Home() {
                 {/* Kolom Kiri: Teks & CTAs */}
                 <div className="lg:col-span-7 flex flex-col text-left items-start">
                   <h1 className="text-display font-sans font-bold tracking-tight text-balance text-foreground mb-block text-left">
-                    Celebrating our beautiful <br />
-                    <span className="font-cursive font-normal text-6xl md:text-8xl text-accent">odyssey of love.</span>
+                    {CONFIG_PAGE.heroTitleLine1} <br />
+                    <span className="font-cursive font-normal text-6xl md:text-8xl text-accent">{CONFIG_PAGE.heroTitleHighlight}</span>
                   </h1>
 
                   <p className="text-body text-foreground/75 max-w-[50ch] font-light mb-block text-left">
-                    A digital garden containing the milestones, memories, and songs that have woven our hearts together. Welcome to our space.
+                    {CONFIG_PAGE.heroDescription}
                   </p>
 
                   <div className="flex flex-wrap gap-4">
@@ -206,13 +215,13 @@ export default function Home() {
                       href="#memories"
                       className="focus-ring rounded-pill bg-accent hover:bg-accent-strong text-surface font-mono text-xs font-medium tracking-wider px-8 py-3.5 shadow-elevation-1 hover:shadow-elevation-2 transition-all duration-300 ease-spring hover:-translate-y-0.5 active:scale-95"
                     >
-                      EXPLORE ARCHIVES
+                      {CONFIG_PAGE.heroButton1}
                     </a>
                     <a
                       href="#letter"
                       className="focus-ring rounded-pill border border-accent/30 hover:border-accent bg-surface/80 text-foreground/80 hover:text-foreground font-mono text-xs font-medium tracking-wider px-8 py-3.5 shadow-elevation-1 hover:shadow-elevation-2 transition-all duration-300 ease-spring hover:-translate-y-0.5 active:scale-95"
                     >
-                      READ LETTER
+                      {CONFIG_PAGE.heroButton2}
                     </a>
                   </div>
                 </div>
@@ -237,9 +246,9 @@ export default function Home() {
 
                   {/* Polaroid Card (Rasio Aspek 8.9 / 12.7) */}
                   <PolaroidCard
-                    localUrl="/images/memory-1.jpg"
-                    caption="Together is my favorite place."
-                    date="Est. June 14, 2023"
+                    localUrl={USE_API_PROXY ? HERO_POLAROID.apiUrl : HERO_POLAROID.localUrl}
+                    caption={HERO_POLAROID.caption}
+                    date={HERO_POLAROID.date}
                     className="hero-polaroid w-[250px] sm:w-[280px] md:w-[300px] relative z-10 transform -rotate-3 hover:rotate-0 hover:scale-102 hover:shadow-elevation-3 select-none cursor-pointer"
                     aspectRatioClass="aspect-[8.9/12.7]"
                     variant="hero"

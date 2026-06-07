@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { SparkleIcon } from "@phosphor-icons/react";
 import AmbientPetals from "./AmbientPetals";
+import { CONFIG_MILESTONES } from "@/config/textConfig";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -16,32 +17,7 @@ interface GreetingCardItem {
   message: string;
 }
 
-const CARDS: GreetingCardItem[] = [
-  {
-    year: "Year 1",
-    milestone: "The Spark",
-    title: "Finding You in the Noise",
-    message: "It felt like the stars aligned in perfect unison. A simple conversation bloomed into hours, then days, and eventually, the baseline of our shared reality. We learned the shape of each other's laughter and decided we never wanted to forget it.",
-  },
-  {
-    year: "Year 2",
-    milestone: "The Roots",
-    title: "Building Our Shared Language",
-    message: "Beyond the initial magic lay the beautiful work of growing together. We built inside jokes, memorized coffee orders, and discovered that love is found in quiet Tuesday nights, cooking together, and simply being in the same room.",
-  },
-  {
-    year: "Year 3",
-    milestone: "The Canopy",
-    title: "Through Weather and Sunshine",
-    message: "Life brought its storms and its gold seasons. With every challenge, we discovered that holding hands was not just a gesture, but a promise. We learned to support, to heal, and to look at the future with a single unified gaze.",
-  },
-  {
-    year: "Eternity",
-    milestone: "The Horizon",
-    title: "To All Our Unwritten Pages",
-    message: "Here we stand today, stronger and more in love than ever. Every year is a chapter, but our book is far from finished. I look forward to every sunrise, every adventure, and every single quiet moment with you by my side.",
-  },
-];
+// CARDS array has been refactored into src/config/textConfig.ts
 
 const ASSET_BASE = "/assets/hibiscus_flower";
 
@@ -330,11 +306,11 @@ export default function SplitContent() {
             {/* Visual Heading for Column */}
             <div className="text-center lg:text-left w-full mb-8">
               <span className="font-mono text-xs tracking-[0.25em] uppercase text-foreground/65 block mb-2">
-                Chapter II
+                {CONFIG_MILESTONES.chapter}
               </span>
               <h2 className="text-subheading font-sans font-light tracking-tight text-foreground">
-                A bouquet grown from <br />
-                <span className="font-cursive text-4xl text-accent">years of affection</span>
+                {CONFIG_MILESTONES.titleLine1} <br />
+                <span className="font-cursive text-4xl text-accent">{CONFIG_MILESTONES.titleHighlight}</span>
               </h2>
             </div>
 
@@ -382,7 +358,7 @@ export default function SplitContent() {
 
         {/* Right Column - Scrolling Milestone Cards */}
         <div ref={rightColRef} className="lg:col-span-7 flex flex-col gap-12 lg:gap-16">
-          {CARDS.map((card, idx) => (
+          {CONFIG_MILESTONES.cards.map((card, idx) => (
             <div
               key={idx}
               className="greeting-card bg-surface p-8 md:p-12 rounded-card shadow-elevation-1 border border-foreground/5 hover:shadow-elevation-2 hover:-translate-y-1.5 transition-all duration-500 transition-spring relative overflow-hidden group"
