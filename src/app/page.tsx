@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -24,6 +24,28 @@ export default function Home() {
   const mainContentRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const themeColorMetaRef = useRef<HTMLMetaElement | null>(null);
+
+  // Sinkronkan warna chrome iOS (status bar & toolbar Safari) dengan stage agar
+  // tidak muncul "pita" krem di area sensitif: gelap saat pin/gift, krem saat main.
+  // Memakai createElement + ref (bukan document.querySelector) sesuai AGENTS.md.
+  useEffect(() => {
+    let meta = themeColorMetaRef.current;
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "theme-color";
+      document.head.appendChild(meta);
+      themeColorMetaRef.current = meta;
+    }
+    meta.content = stage === "main" ? "#FFFBF9" : "#170E0D";
+  }, [stage]);
+
+  useEffect(() => {
+    return () => {
+      themeColorMetaRef.current?.remove();
+      themeColorMetaRef.current = null;
+    };
+  }, []);
 
   useGSAP(
     () => {
@@ -106,12 +128,12 @@ export default function Home() {
       {stage === "main" && (
         <>
           {/* Ambient floating petals - GSAP Multi-Directional */}
-          <AmbientPetals />
+          {giftTransitionComplete && <AmbientPetals />}
 
           {/* Navigation Header — absolute transparent */}
           <header
             ref={headerRef}
-            className="absolute top-0 left-0 z-40 w-full bg-transparent"
+            className="absolute top-0 left-0 z-40 w-full bg-transparent pt-[env(safe-area-inset-top)]"
           >
             <div className="h-20 w-full px-6 md:px-12 flex items-center justify-between max-w-7xl mx-auto">
               <div className="flex items-center gap-2 border border-foreground/10 bg-surface/70 px-4 py-2 rounded-full shadow-elevation-1 backdrop-blur-md text-xs font-mono text-foreground/80">
@@ -157,7 +179,7 @@ export default function Home() {
           {/* Main Content */}
           <main ref={mainContentRef} className="relative z-10">
             {/* Hero Intro - Split Layout */}
-            <section className="w-full h-dvh min-h-[550px] flex flex-col justify-center px-6 md:px-12 relative overflow-hidden">
+            <section className="w-full min-h-dvh flex flex-col justify-center px-6 md:px-12 relative overflow-hidden pt-24 pb-12 lg:py-0">
               <FloralDecor />
 
               <div
