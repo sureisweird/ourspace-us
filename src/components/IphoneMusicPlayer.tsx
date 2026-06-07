@@ -24,6 +24,18 @@ const SONG_META = {
   album: "Life Together",
 };
 
+interface EqualizerBarConfig {
+  duration: number;
+  delay: number;
+}
+
+const EQUALIZER_BARS: readonly EqualizerBarConfig[] = [
+  { duration: 0.6, delay: 0 },
+  { duration: 0.5, delay: 0.15 },
+  { duration: 0.7, delay: 0.05 },
+  { duration: 0.55, delay: 0.2 },
+];
+
 interface IphoneMusicPlayerProps {
   audioRef: RefObject<HTMLAudioElement | null>;
 }
@@ -46,11 +58,6 @@ export default function IphoneMusicPlayer({ audioRef }: IphoneMusicPlayerProps) 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-
-    // Auto-play saat pemutar berhasil dimuat (R8.7).
-    // Dicoba sekali, idempotent: jika audio sudah diputar (mis. dari gesture tap
-    // di GiftBoxHero) jangan saling tabrakan; cukup sinkronkan status. Jika
-    // diblokir browser, fallback mulus ke mode siap-putar tanpa error mengganggu.
     const tryAutoPlay = () => {
       if (autoPlayAttempted.current) return;
       const el = audioRef.current;
@@ -67,7 +74,6 @@ export default function IphoneMusicPlayer({ audioRef }: IphoneMusicPlayerProps) 
         .play()
         .then(() => setIsPlaying(true))
         .catch(() => {
-          // Diblokir browser → tetap siap-putar (bisa diputar manual).
           setIsPlaying(false);
         });
     };
@@ -276,6 +282,9 @@ export default function IphoneMusicPlayer({ audioRef }: IphoneMusicPlayerProps) 
                   }}
                 />
               </div>
+
+              {/* Equalizer dekoratif — overlay bawah-tengah cover */}
+              <EqualizerVisualizer isPlaying={isPlaying} />
             </div>
 
             {/* Song Meta & Favorite */}
@@ -414,6 +423,33 @@ export default function IphoneMusicPlayer({ audioRef }: IphoneMusicPlayerProps) 
           untuk memutar musik nyata.
         </p>
       )}
+    </div>
+  );
+}
+
+export function EqualizerVisualizer({ isPlaying }: { isPlaying: boolean }) {
+  return (
+    <div
+      aria-hidden="true"
+      className="eq-visualizer pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-end gap-1 h-5"
+    >
+      {EQUALIZER_BARS.map((bar, i) => (
+        <span
+          key={i}
+          className="eq-bar w-[3px] h-4 rounded-full bg-white/85"
+          style={
+            isPlaying
+              ? {
+                  transformOrigin: "bottom",
+                  animation: `eq-bounce ${bar.duration}s ease-in-out ${bar.delay}s infinite`,
+                }
+              : {
+                  transformOrigin: "bottom",
+                  transform: "scaleY(0.3)",
+                }
+          }
+        />
+      ))}
     </div>
   );
 }
