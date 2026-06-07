@@ -76,10 +76,6 @@ export default function AmbientPetals({ solid = false }: { solid?: boolean }) {
         animatePetal(el);
       });
 
-      // Pause/resume tween berdasarkan visibilitas viewport container instance ini.
-      // Meninggalkan viewport ke arah manapun menjeda kelopak; masuk kembali
-      // dari arah manapun melanjutkannya. useGSAP context me-revert trigger ini
-      // otomatis saat unmount / perubahan dependency (AGENTS.md §5).
       ScrollTrigger.create({
         trigger: containerRef.current,
         start: "top bottom",
@@ -158,13 +154,10 @@ export default function AmbientPetals({ solid = false }: { solid?: boolean }) {
             gsap.to(el, { opacity: solid ? 1 : 0.5, duration: 3, ease: "power1.inOut" });
           },
           onComplete: () => {
-            // Loop berulang dengan koordinat acak baru
             animatePetal(el);
           },
         });
 
-        // Simpan tween hidup berdasarkan index elemen; tween hasil re-loop
-        // akan menggantikan referensi lama agar pause/resume selalu tepat sasaran
         const idx = elements.indexOf(el);
         tweensRef.current[idx] = tween;
       }
@@ -179,7 +172,6 @@ export default function AmbientPetals({ solid = false }: { solid?: boolean }) {
       aria-hidden="true"
     >
       {mountedPetals.map((petal) => (
-        // eslint-disable-next-line @next/next/no-img-element
         <img
           key={petal.id}
           src={`${ASSET_BASE}/${petal.asset}`}

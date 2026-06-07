@@ -3,10 +3,11 @@
 import React, { useRef, useState, useEffect } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { HeartIcon } from "@phosphor-icons/react";
+import { CONFIG_GIFTBOX } from "@/config/textConfig";
 
-// Aset_Bunga: kelopak hibiscus dipakai sebagai partikel ledakan (R5.7/R13.2/R13.5).
 const PETAL_COUNT = 45;
-const PETAL_ASSET_COUNT = 5; // petal_1.svg .. petal_5.svg
+const PETAL_ASSET_COUNT = 5;
 const FLORAL_ASSET_BASE = "/assets/hibiscus_flower";
 
 const WASH_FLOWERS_COUNT = 16;
@@ -15,7 +16,7 @@ const WASH_FLOWERS = Array.from({ length: WASH_FLOWERS_COUNT }).map((_, i) => {
   const count = isOuter ? 12 : 4;
   const index = isOuter ? i - 4 : i;
   const angle = (index / count) * Math.PI * 2 + (isOuter ? Math.PI / 6 : 0);
-  const distance = isOuter ? 45 : 18; // percentage of viewport size
+  const distance = isOuter ? 45 : 18;
   
   let src = `${FLORAL_ASSET_BASE}/flower_medium_1.svg`;
   if (i % 4 === 0) src = `${FLORAL_ASSET_BASE}/flower_big_1.svg`;
@@ -33,7 +34,6 @@ const WASH_FLOWERS = Array.from({ length: WASH_FLOWERS_COUNT }).map((_, i) => {
   };
 });
 
-// Easing standar Sistem_Desain (R9.1): kurva ease-out halus + sentuhan spring.
 const EASE_OUT = "power3.out";
 const EASE_SPRING = "back.out(2)";
 
@@ -53,6 +53,39 @@ interface GiftBoxHeroProps {
   audioRef: React.RefObject<HTMLAudioElement | null>;
 }
 
+interface StarParticle {
+  id: number;
+  x: number;
+  y: number;
+  scale: number;
+  src: string;
+  delay: number;
+  duration: number;
+  opacity: number;
+}
+
+// Pre-defined static stars to avoid hydration mismatch and mount delay
+const STATIC_STARS: StarParticle[] = [
+  { id: 1, x: 8, y: 15, scale: 0.9, src: "/assets/stars/pink_star_3.svg", delay: 0.5, duration: 4.5, opacity: 0.6 },
+  { id: 2, x: 85, y: 12, scale: 1.1, src: "/assets/stars/yellow_star_5.svg", delay: 1.2, duration: 5.2, opacity: 0.5 },
+  { id: 3, x: 12, y: 78, scale: 0.7, src: "/assets/stars/pink_star_8.svg", delay: 2.1, duration: 3.8, opacity: 0.4 },
+  { id: 4, x: 78, y: 82, scale: 1.0, src: "/assets/stars/yellow_star_12.svg", delay: 0.2, duration: 4.8, opacity: 0.7 },
+  { id: 5, x: 25, y: 22, scale: 0.6, src: "/assets/stars/yellow_star_2.svg", delay: 3.1, duration: 5.5, opacity: 0.3 },
+  { id: 6, x: 70, y: 28, scale: 0.8, src: "/assets/stars/pink_star_1.svg", delay: 1.7, duration: 4.2, opacity: 0.5 },
+  { id: 7, x: 18, y: 45, scale: 1.1, src: "/assets/stars/yellow_star_9.svg", delay: 0.8, duration: 3.5, opacity: 0.6 },
+  { id: 8, x: 88, y: 48, scale: 0.7, src: "/assets/stars/pink_star_11.svg", delay: 2.5, duration: 5.0, opacity: 0.4 },
+  { id: 9, x: 30, y: 88, scale: 0.8, src: "/assets/stars/yellow_star_4.svg", delay: 1.4, duration: 4.0, opacity: 0.5 },
+  { id: 10, x: 65, y: 75, scale: 1.0, src: "/assets/stars/pink_star_6.svg", delay: 0.9, duration: 4.7, opacity: 0.6 },
+  { id: 11, x: 50, y: 8, scale: 0.7, src: "/assets/stars/yellow_star_7.svg", delay: 2.8, duration: 5.8, opacity: 0.4 },
+  { id: 12, x: 92, y: 28, scale: 0.9, src: "/assets/stars/pink_star_4.svg", delay: 0.3, duration: 3.2, opacity: 0.5 },
+  { id: 13, x: 6, y: 55, scale: 0.6, src: "/assets/stars/yellow_star_11.svg", delay: 3.4, duration: 4.9, opacity: 0.3 },
+  { id: 14, x: 42, y: 92, scale: 1.1, src: "/assets/stars/pink_star_13.svg", delay: 1.1, duration: 5.1, opacity: 0.6 },
+  { id: 15, x: 80, y: 62, scale: 0.8, src: "/assets/stars/yellow_star_13.svg", delay: 2.3, duration: 4.4, opacity: 0.5 },
+  { id: 16, x: 15, y: 32, scale: 0.9, src: "/assets/stars/pink_star_7.svg", delay: 0.7, duration: 3.9, opacity: 0.5 },
+  { id: 17, x: 82, y: 35, scale: 0.7, src: "/assets/stars/yellow_star_1.svg", delay: 1.9, duration: 4.6, opacity: 0.4 },
+  { id: 18, x: 22, y: 65, scale: 1.0, src: "/assets/stars/pink_star_10.svg", delay: 0.1, duration: 5.3, opacity: 0.7 }
+];
+
 export default function GiftBoxHero({
   onOpenComplete,
   onTransitionComplete,
@@ -61,20 +94,20 @@ export default function GiftBoxHero({
 }: GiftBoxHeroProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const boxWrapperRef = useRef<HTMLDivElement>(null);
-  const lidRef = useRef<SVGGElement>(null);
-  const boxBodyRef = useRef<SVGGElement>(null);
+  const envelopeFlapRef = useRef<HTMLImageElement>(null);
+  const envelopeBodyRef = useRef<HTMLImageElement>(null);
+  const envelopeSealRef = useRef<HTMLImageElement>(null);
+  const letterSheetRef = useRef<HTMLDivElement>(null);
   const washRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
 
   const [petals, setPetals] = useState<PetalParticle[]>([]);
 
-  // Pre-generate petals at mount inside useEffect to comply with React 19 purity rules (no Math.random during render).
-  // Wrapped in setTimeout to prevent ESLint set-state-in-effect warnings by running the update asynchronously.
   useEffect(() => {
     const generatedPetals = Array.from({ length: PETAL_COUNT }).map((_, i) => {
       const angle = Math.random() * Math.PI * 2;
       const distance = 40 + Math.random() * 120;
-      const assetIndex = Math.floor(Math.random() * PETAL_ASSET_COUNT) + 1; // 1..5
+      const assetIndex = Math.floor(Math.random() * PETAL_ASSET_COUNT) + 1;
       return {
         id: i,
         x: Math.cos(angle) * distance,
@@ -84,34 +117,81 @@ export default function GiftBoxHero({
         src: `${FLORAL_ASSET_BASE}/petal_${assetIndex}.svg`,
       };
     });
+
     const timer = setTimeout(() => {
       setPetals(generatedPetals);
     }, 0);
     return () => clearTimeout(timer);
   }, []);
 
+  const [loadedImages, setLoadedImages] = useState({ body: false, flap: false, seal: false });
+  const allImagesLoaded = loadedImages.body && loadedImages.flap && loadedImages.seal;
+
+  const handleLoad = (key: "body" | "flap" | "seal") => {
+    setLoadedImages((prev) => {
+      if (prev[key]) return prev;
+      return { ...prev, [key]: true };
+    });
+  };
+
+  useEffect(() => {
+    setLoadedImages((prev) => {
+      const body = envelopeBodyRef.current?.complete || prev.body;
+      const flap = envelopeFlapRef.current?.complete || prev.flap;
+      const seal = envelopeSealRef.current?.complete || prev.seal;
+      if (body !== prev.body || flap !== prev.flap || seal !== prev.seal) {
+        return { body, flap, seal };
+      }
+      return prev;
+    });
+  }, []);
+
   const [isClicked, setIsClicked] = useState(false);
-  // Penanda audio gagal diputar → tampilkan petunjuk halus untuk mengetuk lagi (R5.4).
+  const [isOpened, setIsOpened] = useState(false);
   const [playFailed, setPlayFailed] = useState(false);
-  // Guard agar tap berulang saat menunggu Promise play() tidak memicu ganda.
   const isOpeningRef = useRef(false);
 
-  // Floating ambient animation
+  // Hormati prefers-reduced-motion (AGENTS.md §8) untuk ledakan petal/wash.
+  const prefersReducedRef = useRef(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    prefersReducedRef.current = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+  }, []);
+
+  const releaseOpenWillChange = () => {
+    const targets = [
+      boxWrapperRef.current,
+      envelopeBodyRef.current,
+      envelopeFlapRef.current,
+      envelopeSealRef.current,
+      letterSheetRef.current,
+    ].filter((el) => el !== null) as Element[];
+
+    if (targets.length > 0) {
+      gsap.set(targets, { willChange: "auto" });
+    }
+    gsap.set(".petal-particle", { willChange: "auto" });
+  };
+
+  // Floating ambient animation for the envelope wrapper
   useGSAP(
     () => {
       if (isClicked) return;
 
       gsap.to(boxWrapperRef.current, {
-        y: -15,
-        rotation: 2,
+        y: -12,
+        rotation: 0.5,
         duration: 3,
         repeat: -1,
         yoyo: true,
         ease: "power1.inOut",
       });
 
-      gsap.to(lidRef.current, {
-        y: -3,
+      // Gently pulse/sway the wax seal
+      gsap.to(envelopeSealRef.current, {
+        scale: 1.05,
         duration: 1.5,
         repeat: -1,
         yoyo: true,
@@ -122,32 +202,23 @@ export default function GiftBoxHero({
   );
 
   const handleOpenBox = async () => {
-    // Guard ganda: sudah terbuka atau sedang menunggu Promise play().
     if (isClicked || isOpeningRef.current) return;
     isOpeningRef.current = true;
     setPlayFailed(false);
 
     const audio = audioRef.current;
-
-    // GATE (R5.2/5.3/5.4): mulai audio SEGERA di dalam gesture tap, lalu tahan
-    // timeline pembukaan hingga Promise play() resolve. Karena dipanggil dalam
-    // gesture tap, ini kompatibel dengan kebijakan autoplay browser & AGENTS.md.
     try {
       if (!audio) {
-        // Tanpa elemen audio, audio tidak dapat diputar → perlakukan sebagai gagal.
         throw new Error("Audio element is not available");
       }
       await audio.play();
     } catch (err) {
-      // Audio gagal/ditolak → JANGAN jalankan timeline pembukaan & onOpenComplete.
-      // UI tetap pada keadaan "tap untuk membuka" (R5.4).
-      console.warn("Audio playback failed; gift opening is gated:", err);
+      console.warn("Audio playback failed; envelope opening is gated:", err);
       isOpeningRef.current = false;
       setPlayFailed(true);
       return;
     }
 
-    // Audio berhasil diputar → jalankan animasi pembukaan.
     setIsClicked(true);
   };
 
@@ -155,11 +226,20 @@ export default function GiftBoxHero({
     () => {
       if (!isClicked || petals.length === 0) return;
 
-      const tl = gsap.timeline({ onComplete: onOpenComplete });
+      const reduced = prefersReducedRef.current;
 
+      const tl = gsap.timeline({
+        onComplete: () => {
+          releaseOpenWillChange();
+          setIsOpened(true);
+          onOpenComplete();
+        },
+      });
+
+      // Click reaction (anticipate)
       tl.to(boxWrapperRef.current, {
         y: 0,
-        scale: 1.1,
+        scale: 1.05,
         duration: 0.15,
         ease: EASE_SPRING,
       });
@@ -171,22 +251,34 @@ export default function GiftBoxHero({
         ease: EASE_OUT,
       }, 0);
 
-      tl.to(lidRef.current, {
-        y: -300,
-        x: 100,
-        rotation: 120,
+      // Wax seal pops and fades away
+      tl.to(envelopeSealRef.current, {
+        scale: 1.5,
         opacity: 0,
+        duration: 0.4,
+        ease: "back.in(1.2)",
+      }, 0.1);
+
+      // Envelope flap folds open
+      tl.to(envelopeFlapRef.current, {
+        scaleY: 1,
+        duration: 0.6,
+        ease: "power2.inOut",
+      }, 0.25);
+
+      // Put flap behind the letter once the letter starts sliding up
+      tl.set(envelopeFlapRef.current, { zIndex: 5 }, 0.55);
+
+      // Letter slides up out of envelope
+      tl.to(letterSheetRef.current, {
+        opacity: 1,
+        y: -120,
+        scale: 1.02,
         duration: 0.8,
-        ease: EASE_OUT,
-      }, 0.1);
+        ease: "back.out(1.2)",
+      }, 0.55);
 
-      tl.to(boxBodyRef.current, {
-        scale: 0.85,
-        transformOrigin: "center bottom",
-        duration: 0.3,
-        ease: EASE_OUT,
-      }, 0.1);
-
+      // Trigger the flower and petal animations
       tl.fromTo(
         ".petal-particle",
         { x: 0, y: 0, scale: 0.1, opacity: 0 },
@@ -196,15 +288,15 @@ export default function GiftBoxHero({
           rotation: (i) => petals[i].rotation + 360,
           scale: (i) => petals[i].scale,
           opacity: 0.9,
-          duration: 1.2,
-          stagger: { each: 0.005, from: "random" },
+          duration: reduced ? 0.4 : 1.2,
+          stagger: reduced ? 0 : { each: 0.012, from: "random" },
           ease: EASE_OUT,
           force3D: true,
         },
-        0.15
+        0.85
       );
 
-      tl.to(washRef.current, { opacity: 1, duration: 0.15 }, 0.4);
+      tl.to(washRef.current, { opacity: 1, duration: 0.15 }, 1.1);
 
       tl.fromTo(
         ".wash-flower",
@@ -215,24 +307,30 @@ export default function GiftBoxHero({
           scale: (i) => WASH_FLOWERS[i].scale,
           rotation: (i) => WASH_FLOWERS[i].rotation,
           opacity: 1,
-          duration: 1.2,
-          stagger: { each: 0.02, from: "center" },
+          duration: reduced ? 0.5 : 1.2,
+          stagger: reduced ? 0 : { each: 0.035, from: "center" },
           ease: "power2.out",
           force3D: true,
         },
-        0.45
+        1.15
       );
 
       tl.to(
         "#wash-bg",
         { opacity: 1, duration: 0.8, ease: "power2.inOut" },
-        0.75
+        1.45
       );
 
       tl.to(
-        [boxBodyRef.current, ".petal-particle"],
+        [
+          envelopeBodyRef.current,
+          envelopeFlapRef.current,
+          letterSheetRef.current,
+          ".petal-particle",
+          ".ambient-star"
+        ],
         { opacity: 0, duration: 0.4 },
-        1.1
+        1.8
       );
     },
     { scope: containerRef, dependencies: [isClicked, petals] }
@@ -243,11 +341,17 @@ export default function GiftBoxHero({
     () => {
       if (!isTransitioning) return;
 
+      // Pastikan elemen scatter dipromosikan jadi GPU layer selama transisi
+      // (will-change wash-flower sudah dilepas? set ulang agar geser kiri/kanan mulus).
+      gsap.set([".wash-flower", "#wash-bg"], { willChange: "transform, opacity" });
+
       const exitTl = gsap.timeline({
-        onComplete: onTransitionComplete,
+        onComplete: () => {
+          gsap.set([".wash-flower", "#wash-bg"], { willChange: "auto" });
+          onTransitionComplete?.();
+        },
       });
 
-      // 1. Scatter wash flowers to left and right off-screen
       exitTl.to(
         ".wash-flower",
         {
@@ -262,7 +366,6 @@ export default function GiftBoxHero({
         0
       );
 
-      // 2. Fade out wash background
       exitTl.to(
         "#wash-bg",
         {
@@ -273,12 +376,10 @@ export default function GiftBoxHero({
         0.1
       );
 
-      // 3. Fade out container background and blur (instead of container opacity, so children flowers stay solid)
       exitTl.to(
         containerRef.current,
         {
           backgroundColor: "rgba(23, 14, 13, 0)",
-          backdropFilter: "blur(0px)",
           duration: 1.2,
           ease: "power2.inOut",
         },
@@ -291,102 +392,196 @@ export default function GiftBoxHero({
   return (
     <div
       ref={containerRef}
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#170E0D]/95 backdrop-blur-md overflow-hidden select-none isolate ${
+      style={{ willChange: "background-color", contain: "layout paint" }}
+      className={`fixed inset-0 z-50 flex flex-col items-center bg-[#170E0D]/95 overflow-hidden select-none isolate ${
         isTransitioning ? "pointer-events-none" : ""
       }`}
     >
-      {/* Ambient background blobs — tint dari Token_Desain (R5.5/R13.9) */}
+      {/* Ambient background blobs */}
       <div className="absolute inset-0 pointer-events-none opacity-20">
         <div className="absolute top-[10%] left-[15%] w-8 h-8 rounded-full bg-accent blur-sm animate-pulse-slow" />
         <div className="absolute bottom-[20%] right-[10%] w-12 h-12 rounded-full bg-surface blur-md animate-pulse-slow" />
         <div className="absolute top-[40%] right-[25%] w-6 h-6 rounded-full bg-accent-strong blur-sm animate-pulse-slow" />
       </div>
 
-      {/* Main interactive area */}
-      <div className="relative z-10 flex flex-col items-center">
-        {/* Text prompt */}
-        <div
-          ref={textRef}
-          className="text-center mb-16 px-4 cursor-pointer"
-          onClick={handleOpenBox}
-        >
-          <span className="font-mono text-xs tracking-[0.3em] uppercase text-accent block mb-3 animate-pulse">
-            An anniversary gift for you
-          </span>
-          <h1 className="font-cursive text-4xl md:text-5xl text-background">
-            Tap to open our memories
-          </h1>
-          {playFailed && (
-            <span className="font-mono text-[0.7rem] tracking-[0.2em] uppercase text-accent-strong block mt-4 animate-fade-in">
-              Ketuk sekali lagi untuk membuka
-            </span>
-          )}
-        </div>
-
-        {/* Gift Box */}
-        <div
-          ref={boxWrapperRef}
-          onClick={handleOpenBox}
-          className="relative w-64 h-64 flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
-        >
-          <svg
-            viewBox="0 0 200 200"
-            className="w-full h-full filter drop-shadow-[0_20px_35px_rgba(255,183,178,0.25)]"
-          >
-            <g ref={boxBodyRef}>
-              <rect x="50" y="80" width="100" height="90" rx="8" fill="#FFF1F0" />
-              <rect x="46" y="76" width="108" height="8" rx="2" fill="#E6D3D1" />
-              <path d="M 50 80 L 150 80 L 150 90 L 50 90 Z" fill="#2A1F1D" opacity="0.06" />
-              <rect x="90" y="80" width="20" height="90" fill="#FFB7B2" />
-              <rect x="50" y="115" width="100" height="20" fill="#FFB7B2" />
-              <circle cx="100" cy="125" r="8" fill="#FFFBF9" stroke="#FFB7B2" strokeWidth="2" />
-            </g>
-
-            <g ref={lidRef}>
-              <rect x="44" y="52" width="112" height="26" rx="4" fill="#FFE5EC" />
-              <rect x="90" y="52" width="20" height="26" fill="#FFB7B2" />
-              <path d="M 90 52 C 65 30 65 15 88 44 Z" fill="#FFB7B2" stroke="#FFB7B2" strokeWidth="1" />
-              <path d="M 110 52 C 135 30 135 15 112 44 Z" fill="#FFB7B2" stroke="#FFB7B2" strokeWidth="1" />
-              <rect x="92" y="46" width="16" height="10" rx="2" fill="#FFE5EC" stroke="#FFB7B2" strokeWidth="2" />
-            </g>
-          </svg>
-
-          {petals.map((petal) => (
-            // eslint-disable-next-line @next/next/no-img-element
+      {/* Twinkling ambient stars */}
+      {!isOpened && (
+        <div className="ambient-star absolute inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
+          {STATIC_STARS.map((star) => (
             <img
-              key={petal.id}
-              src={petal.src}
+              key={star.id}
+              src={star.src}
               alt=""
-              aria-hidden="true"
-              draggable={false}
-              className="petal-particle absolute w-14 h-14 pointer-events-none object-contain opacity-0 scale-0"
+              className="absolute animate-twinkle-float pointer-events-none select-none"
               style={{
-                left: "calc(50% - 28px)",
-                top: "calc(50% - 28px)",
+                left: `${star.x}%`,
+                top: `${star.y}%`,
+                width: `${star.scale * 16}px`,
+                height: `${star.scale * 16}px`,
+                opacity: star.opacity,
+                animationDelay: `${star.delay}s`,
+                animationDuration: `${star.duration}s`,
                 willChange: "transform, opacity",
-                backfaceVisibility: "hidden",
-                WebkitBackfaceVisibility: "hidden",
               }}
             />
           ))}
         </div>
-      </div>
+      )}
+
+      {!allImagesLoaded && (
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 animate-fade-in">
+          <div className="relative w-16 h-16 flex items-center justify-center">
+            <HeartIcon
+              size={36}
+              weight="fill"
+              className="text-accent animate-pulse"
+              style={{ animationDuration: "1.5s" }}
+            />
+            <div className="absolute inset-0 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
+          </div>
+          <span className="font-mono text-[10px] tracking-[0.2em] text-accent/80 uppercase">
+            Memuat kenangan...
+          </span>
+        </div>
+      )}
+
+      {/* Main interactive area */}
+      {!isOpened && (
+        <div
+          className={`relative z-10 flex min-h-dvh w-full flex-col items-center justify-center px-4 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] transition-all duration-700 ease-in-out ${
+            allImagesLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+          }`}
+        >
+          {/* Text prompt */}
+          <div
+            ref={textRef}
+            className="text-center mb-12 px-4 cursor-pointer"
+            onClick={handleOpenBox}
+          >
+            <span className="font-mono text-xs tracking-[0.3em] uppercase text-accent block mb-3 animate-pulse">
+              {CONFIG_GIFTBOX.envelopeSub}
+            </span>
+            <h1 className="font-cursive text-4xl md:text-5xl text-background">
+              {CONFIG_GIFTBOX.envelopeTitle}
+            </h1>
+            {playFailed && (
+              <span className="font-mono text-[0.7rem] tracking-[0.2em] uppercase text-accent-strong block mt-4 animate-fade-in">
+                {CONFIG_GIFTBOX.envelopeRetry}
+              </span>
+            )}
+          </div>
+
+          {/* Envelope Wrapper - Proportional aspect ratio matches envelope_body viewBox 1477:1114 */}
+          <div
+            ref={boxWrapperRef}
+            onClick={handleOpenBox}
+            className="relative w-[300px] md:w-[380px] aspect-1477/1114 cursor-pointer active:scale-95 transition-transform"
+            style={{ perspective: "1000px" }}
+          >
+            {/* Letter Sheet (Kertas Surat) - Tersembunyi di dalam amplop */}
+            <div
+              ref={letterSheetRef}
+              className="absolute w-[90%] h-[80%] bg-[#FFFBF9] border border-accent/20 rounded-inner shadow-elevation-2 p-5 md:p-6 flex flex-col justify-between opacity-0 pointer-events-none select-none z-10"
+              style={{ 
+                left: "5%",
+                top: "10%",
+                willChange: "transform, opacity" 
+              }}
+            >
+              <div className="flex-1 flex flex-col items-center justify-center text-center">
+                <span className="font-cursive text-xl md:text-2xl text-accent-strong">{CONFIG_GIFTBOX.letterDear}</span>
+                <p className="font-sans text-[8px] md:text-[9px] uppercase tracking-widest text-foreground/60 mt-2">
+                  {CONFIG_GIFTBOX.letterSub}
+                </p>
+                <p className="font-sans text-[7px] md:text-[8px] uppercase tracking-wider text-foreground/40 mt-1">
+                  {CONFIG_GIFTBOX.letterText}
+                </p>
+              </div>
+              <div className="flex justify-center">
+                <HeartIcon size={14} weight="fill" className="text-accent animate-pulse" />
+              </div>
+            </div>
+
+            {/* Envelope Body (Badan Amplop) */}
+            <img
+              ref={envelopeBodyRef}
+              src="/assets/envelope/envelope_body.svg"
+              alt="Envelope Body"
+              onLoad={() => handleLoad("body")}
+              className="absolute inset-0 w-full h-full object-fill pointer-events-none z-20"
+              style={{ willChange: "transform, opacity" }}
+            />
+
+            {/* Envelope Flap (Tutup Amplop) */}
+            <img
+              ref={envelopeFlapRef}
+              src="/assets/envelope/envelope_flap.svg"
+              alt="Envelope Flap"
+              onLoad={() => handleLoad("flap")}
+              className="absolute pointer-events-none z-30"
+              style={{ 
+                width: "99.05%",
+                height: "62.12%",
+                left: "0.47%",
+                top: "-62.12%",
+                transform: "scaleY(-1)",
+                willChange: "transform, opacity",
+                transformOrigin: "center bottom" 
+              }}
+            />
+
+            {/* Envelope Seal (Cap Lilin) */}
+            <img
+              ref={envelopeSealRef}
+              src="/assets/envelope/envelope_seal.svg"
+              alt="Wax Seal"
+              onLoad={() => handleLoad("seal")}
+              className="absolute w-20 h-20 md:w-24 md:h-24 object-contain pointer-events-none z-40"
+              style={{ 
+                left: "50%",
+                top: "56%",
+                transform: "translate(-50%, -50%)",
+                willChange: "transform, opacity" 
+              }}
+            />
+
+            {petals.map((petal) => (
+              <img
+                key={petal.id}
+                src={petal.src}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                decoding="async"
+                className="petal-particle absolute w-14 h-14 pointer-events-none object-contain opacity-0 scale-0"
+                style={{
+                  left: "calc(50% - 28px)",
+                  top: "calc(50% - 28px)",
+                  willChange: "transform, opacity",
+                  backfaceVisibility: "hidden",
+                  WebkitBackfaceVisibility: "hidden",
+                  zIndex: 15
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       <div
         ref={washRef}
         className="pointer-events-none fixed inset-0 z-60 overflow-hidden opacity-0"
       >
-        {/* Solid background color that fades in behind the expanding flowers to guarantee no gaps */}
         <div id="wash-bg" className="absolute inset-0 bg-accent opacity-0" />
 
-        {/* Multiple blooming flowers exploding and scaling outward from the center */}
         {WASH_FLOWERS.map((fw) => (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             key={fw.id}
             src={fw.src}
             alt=""
             aria-hidden="true"
             draggable={false}
+            decoding="async"
             className="wash-flower absolute w-48 h-48 md:w-64 md:h-64 object-contain pointer-events-none"
             style={{
               left: "50%",
@@ -399,6 +594,27 @@ export default function GiftBoxHero({
           />
         ))}
       </div>
+
+      <style>{`
+        @keyframes twinkle-float {
+          0%, 100% {
+            transform: translateY(0) scale(1) rotate(0deg);
+            opacity: 0.25;
+          }
+          50% {
+            transform: translateY(-6px) scale(1.12) rotate(8deg);
+            opacity: 0.8;
+          }
+        }
+        .animate-twinkle-float {
+          animation: twinkle-float infinite ease-in-out;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .animate-twinkle-float {
+            animation: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

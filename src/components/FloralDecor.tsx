@@ -4,11 +4,6 @@ import { useState } from "react";
 
 const ASSET_BASE = "/assets/hibiscus_flower";
 
-/**
- * Aset_Bunga dekoratif (R13.1, R13.5). Dirender sebagai <img> polos dengan
- * alt="" + aria-hidden. Bila aset gagal dimuat, elemen disembunyikan secara
- * anggun (graceful degradation, R13.6) tanpa merusak tata letak di sekitarnya.
- */
 function DecorImage({
   name,
   className,
@@ -23,7 +18,6 @@ function DecorImage({
   if (failed) return null;
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
     <img
       src={`${ASSET_BASE}/${name}`}
       alt=""
@@ -37,12 +31,6 @@ function DecorImage({
   );
 }
 
-/**
- * Rangkaian bunga sudut yang disusun dari komposisi Aset_Bunga (flower_medium_*,
- * leaf_*, petal_*). Dipakai untuk sudut kiri & kanan bawah (kanan di-mirror via
- * scale-x-[-1] dari pemanggil). Animasi ambient memakai kelas `animate-sway`
- * sehingga otomatis dipatuhi reduced-motion lewat CSS di globals.css (R13.8).
- */
 function CornerSpray({ className }: { className?: string }) {
   return (
     <div className={`relative aspect-5/6 ${className ?? ""}`}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -10,7 +10,9 @@ import PinGate from "@/components/PinGate";
 import GiftBoxHero from "@/components/GiftBoxHero";
 import MemoryLane from "@/components/MemoryLane";
 import SplitContent from "@/components/SplitContent";
-import MusicLetterFooter, { SONG_SRC } from "@/components/MusicLetterFooter";
+import MusicLetterFooter from "@/components/MusicLetterFooter";
+import { SONG_SRC, HERO_POLAROID, USE_API_PROXY } from "@/config/galleryConfig";
+import { CONFIG_PAGE } from "@/config/textConfig";
 import FloralDecor from "@/components/FloralDecor";
 import AmbientPetals from "@/components/AmbientPetals";
 import PolaroidCard from "@/components/PolaroidCard";
@@ -20,9 +22,41 @@ type AppStage = "pin" | "gift" | "main";
 export default function Home() {
   const [stage, setStage] = useState<AppStage>("pin");
   const [giftTransitionComplete, setGiftTransitionComplete] = useState(false);
+  const [readyToReveal, setReadyToReveal] = useState(false);
   const mainContentRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  // iOS mewarnai area di balik status bar/toolbar (pita atas-bawah) dengan warna
+  // <body>. Agar pita menyatu (tidak tampak terpotong) di stage gelap, samakan
+  // warna body/html dengan stage: gelap saat pin/gift, krem saat utama.
+  // Akses elemen langsung (bukan querySelector) sesuai AGENTS.md.
+  useEffect(() => {
+    if (stage !== "main") {
+      gsap.set([document.documentElement, document.body], {
+        backgroundColor: "#170E0D",
+      });
+      document.body.classList.add("stage-dark");
+    } else {
+      document.body.classList.remove("stage-dark");
+    }
+  }, [stage]);
+
+  // Saat konten utama mulai terungkap, animasikan warna body gelap→krem dengan
+  // durasi/easing yang sinkron dengan animasi keluar GiftBox, sehingga pita ikut
+  // berubah mulus tanpa "flip" mendadak (penyebab bug transisi sebelumnya).
+  useEffect(() => {
+    if (!readyToReveal) return;
+    const tween = gsap.to([document.documentElement, document.body], {
+      backgroundColor: "#FFFBF9",
+      duration: 1.2,
+      ease: "power2.inOut",
+    });
+    return () => {
+      tween.kill();
+    };
+  }, [readyToReveal]);
 
   useGSAP(
     () => {
@@ -32,34 +66,36 @@ export default function Home() {
 
       gsap.fromTo(
         mainContentRef.current,
-        { opacity: 0, y: 40 },
+        { y: 40 },
         {
-          opacity: 1,
           y: 0,
-          duration: 1.5,
+          duration: 0.5,
           ease: "power3.out",
           delay: 0.1,
-          // PENTING: hapus transform sisa setelah animasi.
-          // GSAP meninggalkan `transform: translate(0px,0px)` inline di <main>,
-          // yang membuat containing block untuk descendant `position: fixed`.
-          // Akibatnya pin GSAP pada kolom bouquet (SplitContent) ter-posisi relatif
-          // terhadap <main>, bukan viewport → kolom "hilang" saat di-scroll dan baru
-          // muncul lagi di akhir section. clearProps mengembalikan fixed → viewport.
-          clearProps: "all",
+          clearProps: "transform",
           onComplete: () => {
             gsap.set(mainContentRef.current, { clearProps: "all" });
             document.body.style.overflow = prevBodyOverflow;
             requestAnimationFrame(() => {
               ScrollTrigger.refresh();
+              requestAnimationFrame(() => setReadyToReveal(true));
             });
           },
         }
       );
 
+      // Fade hanya elemen above-the-fold (hero) agar tidak memaksa paint
+      // offscreen seukuran seluruh dokumen (penyebab utama frame drop saat masuk).
+      gsap.fromTo(
+        heroRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.5, ease: "power2.out", delay: 0.1, clearProps: "opacity" }
+      );
+
       gsap.fromTo(
         headerRef.current,
         { opacity: 0, y: -20 },
-        { opacity: 1, y: 0, duration: 1.2, ease: "power3.out", delay: 0.3 }
+        { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", delay: 0.2 }
       );
 
       // Polaroid ambient float (R9.3)
@@ -101,7 +137,7 @@ export default function Home() {
         <GiftBoxHero
           onOpenComplete={() => setStage("main")}
           onTransitionComplete={() => setGiftTransitionComplete(true)}
-          isTransitioning={stage === "main"}
+          isTransitioning={readyToReveal}
           audioRef={audioRef}
         />
       )}
@@ -110,16 +146,15 @@ export default function Home() {
       {stage === "main" && (
         <>
           {/* Ambient floating petals - GSAP Multi-Directional */}
-          <AmbientPetals />
+          {giftTransitionComplete && <AmbientPetals />}
 
           {/* Navigation Header — absolute transparent */}
           <header
             ref={headerRef}
-            className="absolute top-0 left-0 z-40 w-full bg-transparent"
+            className="absolute top-0 left-0 z-40 w-full bg-transparent pt-[env(safe-area-inset-top)]"
           >
             <div className="h-20 w-full px-6 md:px-12 flex items-center justify-between max-w-7xl mx-auto">
               <div className="flex items-center gap-2 border border-foreground/10 bg-surface/70 px-4 py-2 rounded-full shadow-elevation-1 backdrop-blur-md text-xs font-mono text-foreground/80">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/assets/hibiscus_flower/flower_big_1.svg"
                   alt=""
@@ -127,34 +162,25 @@ export default function Home() {
                   aria-hidden="true"
                 />
                 <span className="tracking-widest uppercase">
-                  OUR SPACE
+                  {CONFIG_PAGE.brandName}
                 </span>
               </div>
 
               <nav className="hidden md:flex items-center gap-10 text-xs font-mono text-foreground/70 tracking-wider">
-                <a
-                  href="#memories"
-                  className="focus-ring rounded-inner transition-colors duration-300 ease-spring hover:text-accent"
-                >
-                  01 / MEMORIES
-                </a>
-                <a
-                  href="#milestones"
-                  className="focus-ring rounded-inner transition-colors duration-300 ease-spring hover:text-accent"
-                >
-                  02 / MILESTONES
-                </a>
-                <a
-                  href="#letter"
-                  className="focus-ring rounded-inner transition-colors duration-300 ease-spring hover:text-accent"
-                >
-                  03 / LETTER
-                </a>
+                {CONFIG_PAGE.navLinks.map((link) => (
+                  <a
+                    key={link.id}
+                    href={link.id}
+                    className="focus-ring rounded-inner transition-colors duration-300 ease-spring hover:text-accent"
+                  >
+                    {link.label}
+                  </a>
+                ))}
               </nav>
 
               <div className="flex items-center gap-2 border border-foreground/10 bg-surface/70 px-4 py-2 rounded-full shadow-elevation-1 text-xs font-mono text-foreground/80 backdrop-blur-md">
                 <CalendarIcon size={14} weight="regular" className="text-accent" />
-                <span>Est. June 14</span>
+                <span>{CONFIG_PAGE.dateEst}</span>
               </div>
             </div>
           </header>
@@ -162,7 +188,7 @@ export default function Home() {
           {/* Main Content */}
           <main ref={mainContentRef} className="relative z-10">
             {/* Hero Intro - Split Layout */}
-            <section className="w-full h-dvh min-h-[550px] flex flex-col justify-center px-6 md:px-12 relative overflow-hidden">
+            <section ref={heroRef} className="w-full min-h-dvh flex flex-col justify-center px-6 md:px-12 relative overflow-hidden pt-24 pb-12 lg:py-0">
               <FloralDecor />
 
               <div
@@ -176,12 +202,12 @@ export default function Home() {
                 {/* Kolom Kiri: Teks & CTAs */}
                 <div className="lg:col-span-7 flex flex-col text-left items-start">
                   <h1 className="text-display font-sans font-bold tracking-tight text-balance text-foreground mb-block text-left">
-                    Celebrating our beautiful <br />
-                    <span className="font-cursive font-normal text-6xl md:text-8xl text-accent">odyssey of love.</span>
+                    {CONFIG_PAGE.heroTitleLine1} <br />
+                    <span className="font-cursive font-normal text-6xl md:text-8xl text-accent">{CONFIG_PAGE.heroTitleHighlight}</span>
                   </h1>
 
                   <p className="text-body text-foreground/75 max-w-[50ch] font-light mb-block text-left">
-                    A digital garden containing the milestones, memories, and songs that have woven our hearts together. Welcome to our space.
+                    {CONFIG_PAGE.heroDescription}
                   </p>
 
                   <div className="flex flex-wrap gap-4">
@@ -189,13 +215,13 @@ export default function Home() {
                       href="#memories"
                       className="focus-ring rounded-pill bg-accent hover:bg-accent-strong text-surface font-mono text-xs font-medium tracking-wider px-8 py-3.5 shadow-elevation-1 hover:shadow-elevation-2 transition-all duration-300 ease-spring hover:-translate-y-0.5 active:scale-95"
                     >
-                      EXPLORE ARCHIVES
+                      {CONFIG_PAGE.heroButton1}
                     </a>
                     <a
                       href="#letter"
                       className="focus-ring rounded-pill border border-accent/30 hover:border-accent bg-surface/80 text-foreground/80 hover:text-foreground font-mono text-xs font-medium tracking-wider px-8 py-3.5 shadow-elevation-1 hover:shadow-elevation-2 transition-all duration-300 ease-spring hover:-translate-y-0.5 active:scale-95"
                     >
-                      READ LETTER
+                      {CONFIG_PAGE.heroButton2}
                     </a>
                   </div>
                 </div>
@@ -203,7 +229,6 @@ export default function Home() {
                 {/* Kolom Kanan: Polaroid Portrait 8.9x12.7 & Overlapping Flowers */}
                 <div className="lg:col-span-5 flex justify-center items-center relative py-6 w-full">
                   {/* Dedaunan dasar di belakang polaroid */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/assets/hibiscus_flower/leaf_2.svg"
                     alt=""
@@ -211,7 +236,6 @@ export default function Home() {
                     className="decor-paint absolute -top-6 right-[15%] w-24 sm:w-28 h-auto rotate-40 opacity-90 z-0 pointer-events-none animate-sway [animation-delay:0.5s]"
                     aria-hidden="true"
                   />
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/assets/hibiscus_flower/leaf_3.svg"
                     alt=""
@@ -222,16 +246,15 @@ export default function Home() {
 
                   {/* Polaroid Card (Rasio Aspek 8.9 / 12.7) */}
                   <PolaroidCard
-                    localUrl="/images/memory-1.jpg"
-                    caption="Together is my favorite place."
-                    date="Est. June 14, 2023"
+                    localUrl={USE_API_PROXY ? HERO_POLAROID.apiUrl : HERO_POLAROID.localUrl}
+                    caption={HERO_POLAROID.caption}
+                    date={HERO_POLAROID.date}
                     className="hero-polaroid w-[250px] sm:w-[280px] md:w-[300px] relative z-10 transform -rotate-3 hover:rotate-0 hover:scale-102 hover:shadow-elevation-3 select-none cursor-pointer"
                     aspectRatioClass="aspect-[8.9/12.7]"
                     variant="hero"
                   />
 
                   {/* Bunga utama & kuncup di depan polaroid */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/assets/hibiscus_flower/flower_medium_3.svg"
                     alt=""
@@ -239,7 +262,6 @@ export default function Home() {
                     className="decor-paint absolute -bottom-6 right-[10%] w-20 h-auto -rotate-12 z-20 pointer-events-none animate-sway [animation-delay:0.8s]"
                     aria-hidden="true"
                   />
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/assets/hibiscus_flower/petal_3.svg"
                     alt=""
@@ -259,75 +281,43 @@ export default function Home() {
               {/* Dipindahkan ke luar <footer> agar tidak terpotong oleh paint containment (content-visibility: auto) pada footer */}
               <div className="absolute inset-0 pointer-events-none z-0 hidden lg:block" aria-hidden="true">
                 {/* Dedaunan dasar di sepanjang dasar halaman */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/leaf_1.svg" alt="" decoding="async" className="decor-paint absolute left-[5%] bottom-[-96px] w-48 h-auto rotate-12" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/leaf_1.svg" alt="" decoding="async" className="decor-paint absolute left-[12%] bottom-[-104px] w-52 h-auto rotate-35" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/leaf_2.svg" alt="" decoding="async" className="decor-paint absolute left-[20%] bottom-[-104px] w-52 h-auto -rotate-15" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/leaf_2.svg" alt="" decoding="async" className="decor-paint absolute left-[30%] bottom-[-112px] w-56 h-auto -rotate-40" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/leaf_3.svg" alt="" decoding="async" className="decor-paint absolute left-[40%] bottom-[-88px] w-44 h-auto rotate-45" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/leaf_3.svg" alt="" decoding="async" className="decor-paint absolute left-[55%] bottom-[-88px] w-44 h-auto rotate-25" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/leaf_1.svg" alt="" decoding="async" className="decor-paint absolute right-[35%] bottom-[-96px] w-48 h-auto -rotate-30" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/leaf_2.svg" alt="" decoding="async" className="decor-paint absolute right-[15%] bottom-[-112px] w-56 h-auto rotate-15" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/leaf_2.svg" alt="" decoding="async" className="decor-paint absolute right-[28%] bottom-[-96px] w-48 h-auto rotate-15" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/leaf_3.svg" alt="" decoding="async" className="decor-paint absolute -right-8 bottom-[-104px] w-52 h-auto -rotate-12" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/leaf_3.svg" alt="" decoding="async" className="decor-paint absolute right-[40%] bottom-[-104px] w-52 h-auto -rotate-15" />
                 
                 {/* Bunga-bunga Besar */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/flower_big_1.svg" alt="" decoding="async" className="decor-paint absolute left-[10%] bottom-[-128px] w-64 h-auto rotate-12 animate-pulse-solid" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/flower_big_1.svg" alt="" decoding="async" className="decor-paint absolute left-[25%] bottom-[-128px] w-64 h-auto rotate-15 animate-pulse-solid [animation-delay:1.1s]" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/flower_big_1.svg" alt="" decoding="async" className="decor-paint absolute right-[8%] bottom-[-128px] w-64 h-auto -rotate-12 animate-pulse-solid [animation-delay:1.5s]" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/flower_big_1.svg" alt="" decoding="async" className="decor-paint absolute right-[30%] bottom-[-128px] w-64 h-auto -rotate-25 animate-pulse-solid [animation-delay:0.4s]" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/flower_big_1.svg" alt="" decoding="async" className="decor-paint absolute left-[45%] bottom-[-120px] w-60 h-auto rotate-45 animate-pulse-solid [animation-delay:0.8s]" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/flower_big_1.svg" alt="" decoding="async" className="decor-paint absolute left-[60%] bottom-[-120px] w-60 h-auto rotate-30 animate-pulse-solid [animation-delay:1.6s]" />
 
                 {/* Bunga-bunga Medium */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/flower_medium_2.svg" alt="" decoding="async" className="decor-paint absolute left-[28%] bottom-[-96px] w-48 h-auto -rotate-30" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/flower_medium_2.svg" alt="" decoding="async" className="decor-paint absolute -right-4 bottom-[-96px] w-48 h-auto -rotate-45" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/flower_medium_3.svg" alt="" decoding="async" className="decor-paint absolute right-[25%] bottom-[-88px] w-44 h-auto rotate-20" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/flower_medium_3.svg" alt="" decoding="async" className="decor-paint absolute right-[20%] bottom-[-96px] w-48 h-auto -rotate-15" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/flower_medium_1.svg" alt="" decoding="async" className="decor-paint absolute -left-8 bottom-[-96px] w-48 h-auto rotate-45" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/flower_medium_1.svg" alt="" decoding="async" className="decor-paint absolute left-[15%] bottom-[-96px] w-48 h-auto -rotate-12" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/flower_medium_2.svg" alt="" decoding="async" className="decor-paint absolute left-[35%] bottom-[-88px] w-44 h-auto rotate-45" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/flower_medium_2.svg" alt="" decoding="async" className="decor-paint absolute left-[50%] bottom-[-88px] w-44 h-auto -rotate-30" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/flower_medium_3.svg" alt="" decoding="async" className="decor-paint absolute right-[45%] bottom-[-80px] w-40 h-auto rotate-60" />
 
                 {/* Benang Sari */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/stamen_1.svg" alt="" decoding="async" className="decor-paint absolute left-[18%] bottom-[-24px] w-12 h-auto rotate-10" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/stamen_2.svg" alt="" decoding="async" className="decor-paint absolute right-[18%] bottom-[-22px] w-11 h-auto -rotate-15" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/stamen_3.svg" alt="" decoding="async" className="decor-paint absolute left-[52%] bottom-[-20px] w-10 h-auto rotate-25" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/stamen_4.svg" alt="" decoding="async" className="decor-paint absolute left-[32%] bottom-[-24px] w-12 h-auto rotate-15" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/stamen_3.svg" alt="" decoding="async" className="decor-paint absolute right-[32%] bottom-[-22px] w-11 h-auto -rotate-20" />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hibiscus_flower/stamen_1.svg" alt="" decoding="async" className="decor-paint absolute left-[62%] bottom-[-20px] w-10 h-auto rotate-10" />
               </div>
 

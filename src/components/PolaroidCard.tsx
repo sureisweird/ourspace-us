@@ -148,7 +148,6 @@ const PolaroidCard = forwardRef<HTMLDivElement, PolaroidCardProps>(
       >
         {/* Stiker bunga/daun hiasan (dekoratif, pointer-events-none) */}
         {!isHero && stickers.map((sticker, index) => (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             key={index}
             src={sticker.src}
@@ -159,7 +158,6 @@ const PolaroidCard = forwardRef<HTMLDivElement, PolaroidCardProps>(
         ))}
         {/* Gambar Polaroid (sudut siku tajam khas polaroid) */}
         <div className={`relative ${aspectRatioClass} w-full overflow-hidden bg-background rounded-none mb-4 border border-accent/15`}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={localUrl}
             alt={caption}

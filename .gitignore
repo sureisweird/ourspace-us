@@ -36,6 +36,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -47,8 +48,8 @@ next-env.d.ts
 # agent skill
 .kiro/
 .agents/
-agent.md
-claude.md
+AGENTS.md
+CLAUDE.md
 
 # scripts
 *.bat

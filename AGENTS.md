@@ -25,7 +25,7 @@ Halaman utama (`src/app/page.tsx`) menggunakan **stage system 3 fase**:
 ```
 "pin" → PinGate (fullscreen overlay, verifikasi PIN)
   ↓  onUnlocked()
-"gift" → GiftBoxHero (fullscreen overlay, animasi buka kado)
+"gift" → GiftBoxHero (fullscreen overlay, animasi buka amplop & surat)
   ↓  onOpenComplete()
 "main" → Konten utama (header + semua section)
 ```
@@ -35,6 +35,7 @@ Halaman utama (`src/app/page.tsx`) menggunakan **stage system 3 fase**:
 - PIN hardcode di `PinGate.tsx` sebagai `PIN_CODE` — jangan pindahkan ke env
 - Audio (`<audio>`) di-mount di `page.tsx` dan di-pass sebagai `audioRef` ke komponen lain
 - Autoplay audio HANYA boleh dipanggil dari dalam gesture handler user (GiftBoxHero)
+- **Sinkronisasi Warna Body & Chrome iOS**: Latar belakang `html` dan `body` disesuaikan per-stage (`#170E0D` saat pin/gift, `#FFFBF9` saat main) untuk menyamakan warna status bar/toolbar Safari & PWA. Transisi ke stage "main" menggunakan GSAP tween pada `backgroundColor` agar perubahan warna mulus tanpa visual flash.
 
 ---
 
@@ -42,12 +43,16 @@ Halaman utama (`src/app/page.tsx`) menggunakan **stage system 3 fase**:
 
 ```
 src/components/
-├── PinGate.tsx          # Stage 1 — form PIN, session storage check
-├── GiftBoxHero.tsx      # Stage 2 — animasi SVG kado + petal explosion + wash overlay
-├── FloralDecor.tsx      # Dekorasi bunga SVG di hero section (pointer-events-none)
-├── MemoryLane.tsx       # Section polaroid grid + lightbox foto
-├── SplitContent.tsx     # Section milestone cards + bouquet SVG
-└── RetroIpodFooter.tsx  # Section iPod player + surat cinta (typing effect)
+├── PinGate.tsx            # Stage 1 — form PIN (menggunakan single invisible input overlay), session storage check
+├── GiftBoxHero.tsx        # Stage 2 — animasi SVG amplop & surat + petal explosion + wash overlay
+├── FloralDecor.tsx        # Dekorasi bunga SVG di hero section (pointer-events-none)
+├── AmbientPetals.tsx      # Partikel kelopak bunga melayang di background (di-render via ScrollTrigger/GSAP secara asinkron)
+├── MemoryLane.tsx         # Section polaroid grid + lightbox foto
+├── PolaroidCard.tsx       # Kartu polaroid fisik dengan hiasan stiker bunga & daun, mendukung keyboard navigation
+├── SplitContent.tsx       # Section milestone cards + bouquet SVG
+├── MusicLetterFooter.tsx  # Section footer gabungan (Music Player & Love Letter)
+├── IphoneMusicPlayer.tsx  # Pemutar musik visual bergaya Apple Music Now Playing (iPhone layout) + earphone kabel dekoratif
+└── LoveLetter.tsx         # Surat cinta romantis dengan pengetikan per-karakter secara organik (typewriter effect)
 ```
 
 **Jangan gabungkan komponen.** Setiap komponen punya satu tanggung jawab.
@@ -95,6 +100,8 @@ useEffect(() => {
 - `ScrollTrigger.refresh()` **harus** di-wrap dalam `requestAnimationFrame()`
 - Gunakan `invalidateOnRefresh: true` pada semua ScrollTrigger yang punya posisi dinamis
 - Set initial GSAP state dengan `gsap.set()` sebelum animasi masuk, bukan hanya di `from`
+- **GPU Promotion & Release (`will-change`)**: Selama transisi berat (seperti di `GiftBoxHero.tsx`), promosikan elemen bergerak ke layer GPU dengan menyetel `willChange` ke `transform, opacity` atau `transform`, tetapi **selalu kembalikan** ke `auto` setelah animasi selesai (`onComplete`) untuk menghindari memory leaks dan degradasi performa rendering jangka panjang.
+- **Above-The-Fold Animation Optimization**: Untuk transisi masuk halaman, batasi animasi fade/transform awal hanya pada komponen di atas lipatan layar (above-the-fold) seperti `heroRef` daripada memudarkan seluruh container `mainContentRef`. Memaksa rendering fade pada seluruh dokumen offscreen dapat memicu frame drop.
 
 ---
 
@@ -106,21 +113,25 @@ useEffect(() => {
 - Jangan tambah `overflow: auto` atau `overflow: scroll` pada elemen apapun tanpa alasan kuat
 - Elemen dekoratif selalu pakai `pointer-events-none` dan `aria-hidden="true"`
 - Scrollbar disembunyikan global di `html` dan `body` — jangan override ini
+- **Tema Default Latar Belakang & Grain Overlay**: `html` dan `body` diatur default ke latar gelap `#170E0D`. Selama stage gelap (pin/gift), tambahkan class `stage-dark` pada `body` untuk menyembunyikan background grain overlay (`body::after { display: none }`) guna mengurangi composite pass layar penuh yang membebani GPU saat transisi/partikel berjalan.
+- **PWA Full-screen / iOS Display Mode**: Konfigurasi Apple Web App Capable (`capable: true`, `statusBarStyle: "black-translucent"`) diatur di metadata layout dan manifest web app (`manifest.ts`) untuk mendukung tampilan edge-to-edge murni tanpa area notch terpotong pada browser iOS.
 
 ---
 
 ## 7. Media — Foto & Audio
 
-**Foto (MemoryLane):**
+**Foto (MemoryLane) & Aset Gambar:**
 - File lokal: `/public/images/memory-1.jpg` s/d `memory-5.jpg`
 - Fallback ke Unsplash URL via `onError` handler — jangan hapus fallback ini
 - Format kolom grid menggunakan Tailwind: `md:col-span-4`, `md:col-span-6`
+- **Asynchronous Image Decoding**: Untuk gambar-gambar kecil, dekorasi, atau partikel dengan kuantitas tinggi yang memicu animasi performa-kritis (seperti petal dan wash flowers di `GiftBoxHero`), gunakan atribut `decoding="async"` untuk mencegah pemblokiran rendering thread utama browser.
 
-**Audio (RetroIpodFooter):**
-- File lagu: `/public/music/` — format MP3 direkomendasikan
-- `SONG_SRC` dan `SONG_META` dikonfigurasi di atas `RetroIpodFooter.tsx`
-- Jika file tidak ada, komponen fallback ke mode visual-only secara otomatis — **jangan break** logika ini
-- Variabel `audioAvailable` mengontrol apakah audio real atau simulasi visual
+**Audio (Music & Player):**
+- File lagu: `/public/music/` — format MP3 direkomendasikan.
+- `SONG_SRC` dikonfigurasi di atas `MusicLetterFooter.tsx`.
+- `SONG_META` dikonfigurasi di atas `IphoneMusicPlayer.tsx`.
+- Jika file tidak ada, komponen fallback ke mode visual-only secara otomatis — **jangan break** logika ini.
+- Variabel `audioAvailable` mengontrol apakah audio real atau simulasi visual.
 
 ---
 
@@ -130,6 +141,7 @@ useEffect(() => {
 - Lightbox di MemoryLane harus punya `role="dialog"` dan `aria-modal="true"`
 - Keyboard navigation: `Enter` dan `Space` harus memicu aksi yang sama dengan klik
 - Animasi berat harus menghormati `prefers-reduced-motion` — sudah ada di globals.css
+- **Handling Reduced Motion pada Animasi GSAP**: Di level komponen (seperti `GiftBoxHero.tsx`), deteksi `window.matchMedia("(prefers-reduced-motion: reduce)").matches`. Jika bernilai `true`, atur durasi transisi menjadi sangat pendek (misal: 0.4s - 0.5s) dan hilangkan stagger/delay animasi multi-elemen agar visual berganti secara instan atau minim gerakan.
 
 ---
 
@@ -142,6 +154,8 @@ useEffect(() => {
 - ❌ Jangan tambah dependency baru tanpa mempertimbangkan bundle size
 - ❌ Jangan gunakan `document.querySelector` — gunakan React ref
 - ❌ Jangan hapus `will-change: transform` dan `isolation: isolate` dari GiftBoxHero container
+- ❌ Jangan biarkan properti `will-change` aktif secara permanen pada elemen bergerak setelah animasi selesai — panggil logic pembersihan kembali ke `auto` demi mencegah kebocoran resource GPU.
+- ❌ Jangan gunakan multiple inputs untuk form PIN di `PinGate.tsx` — selalu gunakan *single invisible overlay input* di atas visual boxes berukuran penuh untuk menghindari isu kegagalan fokus keyboard dan zoom otomatis browser mobile (khususnya iOS).
 
 ---
 
