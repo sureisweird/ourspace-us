@@ -11,18 +11,14 @@ import {
   HeartIcon,
   SpeakerLowIcon,
   SpeakerHighIcon,
-  CaretDownIcon,
   DotsThreeIcon,
   ListBulletsIcon,
   ChatTeardropTextIcon,
 } from "@phosphor-icons/react";
+import { SONG_META, USE_API_PROXY } from "@/config/galleryConfig";
+import { CONFIG_SOUNDTRACK } from "@/config/textConfig";
 
-// Judul & artis yang tampil di layar iPod
-const SONG_META = {
-  title: "Shape Of My Heart",
-  artist: "Backstreet Boys",
-  album: "Life Together",
-};
+
 
 interface EqualizerBarConfig {
   duration: number;
@@ -47,7 +43,19 @@ export default function IphoneMusicPlayer({ audioRef }: IphoneMusicPlayerProps) 
   // audioAvailable: false jika file tidak ditemukan, supaya UI tetap bisa dipakai
   const [audioAvailable, setAudioAvailable] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [coverSrc, setCoverSrc] = useState("/images/memory-3.jpg");
+  const [coverFailed, setCoverFailed] = useState(false);
+  const activeCoverSrc = USE_API_PROXY ? SONG_META.coverApi : SONG_META.coverSrc;
+  const [prevCoverSrc, setPrevCoverSrc] = useState(activeCoverSrc);
+
+  // Sinkronkan secara sinkron jika activeCoverSrc berubah di file konfigurasi (tanpa useEffect)
+  if (activeCoverSrc !== prevCoverSrc) {
+    setPrevCoverSrc(activeCoverSrc);
+    setCoverFailed(false);
+  }
+
+  const coverSrc = coverFailed 
+    ? "" 
+    : activeCoverSrc;
 
   // Penanda agar auto-play (R8.7) hanya dicoba sekali.
   const autoPlayAttempted = useRef(false);
@@ -217,7 +225,7 @@ export default function IphoneMusicPlayer({ audioRef }: IphoneMusicPlayerProps) 
   return (
     <div className="lg:col-span-5 flex flex-col items-center justify-center">
       <span className="font-mono text-xs tracking-[0.25em] uppercase text-foreground/65 mb-8">
-        Our Soundtrack
+        {CONFIG_SOUNDTRACK.title}
       </span>
 
       {/* iPhone Outer Casing */}
@@ -226,6 +234,9 @@ export default function IphoneMusicPlayer({ audioRef }: IphoneMusicPlayerProps) 
         <div className="absolute left-[-8px] top-24 w-1 h-10 bg-zinc-800 rounded-r-md border-r border-zinc-700" />
         <div className="absolute left-[-8px] top-36 w-1 h-10 bg-zinc-800 rounded-r-md border-r border-zinc-700" />
         <div className="absolute right-[-8px] top-28 w-1 h-14 bg-zinc-800 rounded-l-md border-l border-zinc-700" />
+
+        {/* Earphone dekoratif — menancap di port bawah-tengah */}
+        <EarphoneDecor isPlaying={isPlaying} />
 
         {/* Dynamic Island */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-5 bg-black rounded-full z-30 flex items-center justify-center">
@@ -249,17 +260,12 @@ export default function IphoneMusicPlayer({ audioRef }: IphoneMusicPlayerProps) 
           {/* Player UI Content */}
           <div className="relative z-10 flex flex-col justify-between h-full w-full">
             
-            {/* Header */}
-            <div className="flex justify-between items-center w-full px-1 text-white/50">
-              <button className="hover:text-white transition-colors duration-200 cursor-pointer" aria-label="Minimize player">
-                <CaretDownIcon size={18} weight="bold" />
-              </button>
-              <span className="text-[9px] tracking-[0.12em] font-semibold uppercase truncate max-w-[150px] text-white/40">
+            {/* Header — grabber handle ala Apple Music Now Playing */}
+            <div className="flex flex-col items-center w-full">
+              <div className="w-9 h-1 rounded-full bg-white/25" />
+              <span className="mt-2 text-[9px] tracking-[0.18em] font-semibold uppercase text-white/35 truncate max-w-[180px]">
                 {SONG_META.album}
               </span>
-              <button className="hover:text-white transition-colors duration-200 cursor-pointer" aria-label="More options">
-                <DotsThreeIcon size={18} weight="bold" />
-              </button>
             </div>
 
             {/* Album Cover */}
@@ -278,7 +284,7 @@ export default function IphoneMusicPlayer({ audioRef }: IphoneMusicPlayerProps) 
                   height={200}
                   className="w-full h-full object-cover select-none"
                   onError={() => {
-                    setCoverSrc("https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=600&auto=format&fit=crop");
+                    setCoverFailed(true);
                   }}
                 />
               </div>
@@ -287,25 +293,33 @@ export default function IphoneMusicPlayer({ audioRef }: IphoneMusicPlayerProps) 
               <EqualizerVisualizer isPlaying={isPlaying} />
             </div>
 
-            {/* Song Meta & Favorite */}
-            <div className="w-full flex items-center justify-between px-1.5">
+            {/* Song Meta & Actions — gaya Apple Music (artist ter-tint, more bulat) */}
+            <div className="w-full flex items-center justify-between px-1.5 gap-2">
               <div className="flex-1 min-w-0 text-left">
-                <h4 className="text-[13px] font-bold text-white tracking-tight truncate leading-tight">
+                <h4 className="text-[14px] font-bold text-white tracking-tight truncate leading-tight">
                   {SONG_META.title}
                 </h4>
-                <p className="text-[11px] text-white/50 truncate font-medium mt-0.5">
+                <p className="text-[12px] text-accent/90 truncate font-semibold mt-0.5">
                   {SONG_META.artist}
                 </p>
               </div>
-              <button 
-                onClick={() => setIsFavorite(!isFavorite)}
-                className={`p-1 transition-all duration-200 cursor-pointer ${
-                  isFavorite ? "text-accent active:scale-90" : "text-white/20 hover:text-white/50"
-                }`}
-                aria-label={isFavorite ? "Hapus dari Favorit" : "Tambah ke Favorit"}
-              >
-                <HeartIcon size={18} weight={isFavorite ? "fill" : "regular"} />
-              </button>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  onClick={() => setIsFavorite(!isFavorite)}
+                  className={`p-1 transition-all duration-200 cursor-pointer ${
+                    isFavorite ? "text-accent active:scale-90" : "text-white/30 hover:text-white/60"
+                  }`}
+                  aria-label={isFavorite ? "Hapus dari Favorit" : "Tambah ke Favorit"}
+                >
+                  <HeartIcon size={18} weight={isFavorite ? "fill" : "regular"} />
+                </button>
+                <button
+                  className="flex items-center justify-center w-7 h-7 rounded-full bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-all duration-200 cursor-pointer"
+                  aria-label="Opsi lainnya"
+                >
+                  <DotsThreeIcon size={18} weight="bold" />
+                </button>
+              </div>
             </div>
 
             {/* Timeline Scrubber */}
@@ -418,9 +432,7 @@ export default function IphoneMusicPlayer({ audioRef }: IphoneMusicPlayerProps) 
       {/* Hint text jika audio file belum ditambahkan */}
       {!audioAvailable && (
         <p className="mt-4 text-center font-mono text-[10px] text-foreground/40 max-w-[260px]">
-          Tambahkan lagu ke{" "}
-          <code className="bg-accent/10 px-1 rounded">/public/music/our-song.mp3</code>{" "}
-          untuk memutar musik nyata.
+          {CONFIG_SOUNDTRACK.hintText}
         </p>
       )}
     </div>
@@ -450,6 +462,37 @@ export function EqualizerVisualizer({ isPlaying }: { isPlaying: boolean }) {
           }
         />
       ))}
+    </div>
+  );
+}
+
+export function EarphoneDecor({ isPlaying }: { isPlaying: boolean }) {
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute bottom-[-7px] left-1/2 -translate-x-1/2 z-0 flex flex-col items-center"
+    >
+      {/* Plug / connector yang menancap ke port bawah */}
+      <div className="w-2.5 h-3 bg-zinc-700 rounded-b-sm border-x border-zinc-600 shadow-sm" />
+      <div className="w-1.5 h-2 bg-zinc-500 rounded-b-[2px]" />
+
+      {/* Kabel + earbud yang menjuntai; berayun hanya saat lagu diputar */}
+      <div
+        className={`origin-top flex items-start gap-9 -mt-px ${
+          isPlaying ? "animate-sway" : ""
+        }`}
+      >
+        {/* Cabang kiri */}
+        <div className="relative">
+          <div className="w-px h-16 bg-zinc-500/80 rounded-full rotate-14 origin-top" />
+          <span className="absolute -bottom-1 left-[-3px] w-2 h-2 rounded-full bg-zinc-300 ring-1 ring-[#FFB7B2]/40 shadow-sm" />
+        </div>
+        {/* Cabang kanan */}
+        <div className="relative">
+          <div className="w-px h-16 bg-zinc-500/80 rounded-full rotate-[-14deg] origin-top" />
+          <span className="absolute -bottom-1 right-[-3px] w-2 h-2 rounded-full bg-zinc-300 ring-1 ring-[#FFB7B2]/40 shadow-sm" />
+        </div>
+      </div>
     </div>
   );
 }

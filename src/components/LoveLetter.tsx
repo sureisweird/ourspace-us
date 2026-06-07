@@ -2,13 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { HeartIcon } from "@phosphor-icons/react";
+import { CONFIG_LOVELETTER } from "@/config/textConfig";
 
-// Isi surat. Diketik karakter-demi-karakter agar terasa seperti ditulis tangan.
-const LETTER_PARAGRAPHS = [
-  "From the very first moment we met, I felt the gravity of a beautiful, unwritten story beginning. Every day with you has been an adventure, a sanctuary, and the sweetest rhythm.",
-  "We have built our own quiet language, grown roots deep into the earth, and faced every season hand-in-hand. You are my home, my peace, and my absolute greatest gift.",
-  "Here is to every sunset we've watched, every cup of coffee shared, and the infinite chapters that still wait for us ahead. Happy Anniversary.",
-];
+const LETTER_PARAGRAPHS = CONFIG_LOVELETTER.paragraphs;
 const LETTER_TEXT = LETTER_PARAGRAPHS.join("\n\n");
 
 export default function LoveLetter() {
@@ -97,10 +93,10 @@ export default function LoveLetter() {
         {/* Letter Header */}
         <div className="mb-8 relative z-10">
           <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-accent">
-            To My Forever
+            {CONFIG_LOVELETTER.envelopeSub}
           </span>
           <h3 className="font-cursive text-4xl text-foreground mt-2">
-            My Dearest,
+            {CONFIG_LOVELETTER.letterDear}
           </h3>
         </div>
         <div className="font-cursive text-2xl md:text-3xl text-foreground/85 leading-8 relative z-10">
@@ -109,7 +105,7 @@ export default function LoveLetter() {
               {LETTER_PARAGRAPHS.map((para, i) => (
                 <p key={i}>{para}</p>
               ))}
-              <p className="mt-8 text-right text-accent">Always &amp; Forever Yours</p>
+              <p className="mt-8 text-right text-accent">{CONFIG_LOVELETTER.signature}</p>
             </div>
           ) : (
             <>
@@ -118,7 +114,7 @@ export default function LoveLetter() {
                 {LETTER_PARAGRAPHS.map((para, i) => (
                   <p key={i}>{para}</p>
                 ))}
-                <p className="mt-8 text-right">Always &amp; Forever Yours</p>
+                <p className="mt-8 text-right">{CONFIG_LOVELETTER.signature}</p>
               </div>
 
               <div className="absolute inset-0 flex flex-col gap-6 pl-2">
@@ -129,7 +125,7 @@ export default function LoveLetter() {
                 ))}
                 {letterFinished && (
                   <p className="mt-8 text-right text-accent animate-fade-in">
-                    Always &amp; Forever Yours
+                    {CONFIG_LOVELETTER.signature}
                   </p>
                 )}
               </div>

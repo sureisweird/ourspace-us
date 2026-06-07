@@ -4,11 +4,13 @@ import type { RefObject } from "react";
 import IphoneMusicPlayer from "./IphoneMusicPlayer";
 import LoveLetter from "./LoveLetter";
 
+import { SONG_SRC } from "@/config/galleryConfig";
+
 //  CARA MENGGUNAKAN AUDIO NYATA:
 //   1. Taruh file lagu di folder: /public/music/our-song.mp3
-//   2. Ubah SONG_SRC di bawah menjadi "/music/our-song.mp3"
+//   2. Ubah SONG_SRC di galleryConfig.ts
 //   Format yang didukung: .mp3, .ogg, .wav, .aac
-export const SONG_SRC = "/music/Backstreet Boys - Shape Of My Heart (320).mp3";
+export { SONG_SRC };
 
 interface MusicLetterFooterProps {
   audioRef: RefObject<HTMLAudioElement | null>;
