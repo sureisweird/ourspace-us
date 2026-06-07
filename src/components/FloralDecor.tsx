@@ -29,14 +29,10 @@ function DecorImage({
       alt=""
       aria-hidden="true"
       draggable={false}
+      decoding="async"
       onError={() => setFailed(true)}
-      className={className}
-      style={{
-        willChange: "transform",
-        backfaceVisibility: "hidden",
-        WebkitBackfaceVisibility: "hidden",
-        ...style,
-      }}
+      className={`decor-paint ${className ?? ""}`}
+      style={style}
     />
   );
 }
