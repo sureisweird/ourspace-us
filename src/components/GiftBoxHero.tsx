@@ -173,6 +173,7 @@ export default function GiftBoxHero({
       gsap.set(targets, { willChange: "auto" });
     }
     gsap.set(".petal-particle", { willChange: "auto" });
+    gsap.set([".wash-flower", "#wash-bg"], { willChange: "auto" });
   };
 
   // Floating ambient animation for the envelope wrapper
@@ -225,6 +226,21 @@ export default function GiftBoxHero({
   useGSAP(
     () => {
       if (!isClicked || petals.length === 0) return;
+
+      // Promote animating elements to GPU layer at start of animation
+      gsap.set(
+        [
+          boxWrapperRef.current,
+          envelopeBodyRef.current,
+          envelopeFlapRef.current,
+          envelopeSealRef.current,
+          letterSheetRef.current,
+          ".petal-particle",
+          ".wash-flower",
+          "#wash-bg"
+        ],
+        { willChange: "transform, opacity" }
+      );
 
       const reduced = prefersReducedRef.current;
 
@@ -392,7 +408,7 @@ export default function GiftBoxHero({
   return (
     <div
       ref={containerRef}
-      style={{ willChange: "background-color", contain: "layout paint" }}
+      style={{ willChange: "transform, background-color", contain: "layout paint" }}
       className={`fixed inset-0 z-50 flex flex-col items-center bg-[#170E0D]/95 overflow-hidden select-none isolate ${
         isTransitioning ? "pointer-events-none" : ""
       }`}
@@ -484,8 +500,7 @@ export default function GiftBoxHero({
               className="absolute w-[90%] h-[80%] bg-[#FFFBF9] border border-accent/20 rounded-inner shadow-elevation-2 p-5 md:p-6 flex flex-col justify-between opacity-0 pointer-events-none select-none z-10"
               style={{ 
                 left: "5%",
-                top: "10%",
-                willChange: "transform, opacity" 
+                top: "10%"
               }}
             >
               <div className="flex-1 flex flex-col items-center justify-center text-center">
@@ -509,7 +524,6 @@ export default function GiftBoxHero({
               alt="Envelope Body"
               onLoad={() => handleLoad("body")}
               className="absolute inset-0 w-full h-full object-fill pointer-events-none z-20"
-              style={{ willChange: "transform, opacity" }}
             />
 
             {/* Envelope Flap (Tutup Amplop) */}
@@ -525,7 +539,6 @@ export default function GiftBoxHero({
                 left: "0.47%",
                 top: "-62.12%",
                 transform: "scaleY(-1)",
-                willChange: "transform, opacity",
                 transformOrigin: "center bottom" 
               }}
             />
@@ -540,8 +553,7 @@ export default function GiftBoxHero({
               style={{ 
                 left: "50%",
                 top: "56%",
-                transform: "translate(-50%, -50%)",
-                willChange: "transform, opacity" 
+                transform: "translate(-50%, -50%)"
               }}
             />
 
@@ -557,7 +569,6 @@ export default function GiftBoxHero({
                 style={{
                   left: "calc(50% - 28px)",
                   top: "calc(50% - 28px)",
-                  willChange: "transform, opacity",
                   backfaceVisibility: "hidden",
                   WebkitBackfaceVisibility: "hidden",
                   zIndex: 15
@@ -587,7 +598,6 @@ export default function GiftBoxHero({
               left: "50%",
               top: "50%",
               transform: "translate(-50%, -50%) scale(0)",
-              willChange: "transform, opacity",
               backfaceVisibility: "hidden",
               WebkitBackfaceVisibility: "hidden",
             }}

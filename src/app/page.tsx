@@ -33,7 +33,7 @@ export default function Home() {
   // warna body/html dengan stage: gelap saat pin/gift, krem saat utama.
   // Akses elemen langsung (bukan querySelector) sesuai AGENTS.md.
   useEffect(() => {
-    if (stage !== "main") {
+    if (!giftTransitionComplete) {
       gsap.set([document.documentElement, document.body], {
         backgroundColor: "#170E0D",
       });
@@ -41,7 +41,7 @@ export default function Home() {
     } else {
       document.body.classList.remove("stage-dark");
     }
-  }, [stage]);
+  }, [giftTransitionComplete]);
 
   // Saat konten utama mulai terungkap, animasikan warna body gelap→krem dengan
   // durasi/easing yang sinkron dengan animasi keluar GiftBox, sehingga pita ikut
