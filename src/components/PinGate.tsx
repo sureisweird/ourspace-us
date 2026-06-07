@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { HeartIcon } from "@phosphor-icons/react";
+import { CONFIG_PINGATE } from "@/config/textConfig";
 
-const PIN_CODE = "0614";
-const PIN_HINT = "Tanggal pertama kita bertemu 🌸";
+const PIN_HINT = CONFIG_PINGATE.pinHint;
 const SESSION_KEY = "ourspace_unlocked";
 
 const memorySessionFallback: Record<string, string> = {};
@@ -85,12 +85,38 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
     return () => clearTimeout(focusTimer);
   }, []);
 
-  const handleVerify = useCallback((enteredPin: string) => {
-    if (enteredPin === PIN_CODE) {
-      safeSessionSet(SESSION_KEY, "true");
-      onUnlocked();
-    } else {
-      // Salah — shake animation + reset
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  const handleVerify = useCallback(async (enteredPin: string) => {
+    if (isVerifying) return;
+    setIsVerifying(true);
+
+    try {
+      const res = await fetch("/api/verify-pin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ pin: enteredPin }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        safeSessionSet(SESSION_KEY, "true");
+        onUnlocked();
+      } else {
+        // Salah — shake animation + reset
+        setError(true);
+        setShake(true);
+        setTimeout(() => {
+          setShake(false);
+          setPin("");
+          inputRef.current?.focus();
+        }, 600);
+      }
+    } catch (err) {
+      console.error("Verification error:", err);
       setError(true);
       setShake(true);
       setTimeout(() => {
@@ -98,8 +124,10 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
         setPin("");
         inputRef.current?.focus();
       }, 600);
+    } finally {
+      setIsVerifying(false);
     }
-  }, [onUnlocked]);
+  }, [onUnlocked, isVerifying]);
 
   // Auto-verify saat 4 digit terisi lengkap
   useEffect(() => {
@@ -205,10 +233,10 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
         {/* Heading */}
         <div className="text-center mb-10 w-full">
           <h1 className="font-cursive text-4xl text-foreground mb-2">
-            Our Private Space
+            {CONFIG_PINGATE.title}
           </h1>
           <p className="font-mono text-xs tracking-[0.2em] text-accent-strong/80 uppercase">
-            Masukkan PIN untuk melanjutkan
+            {CONFIG_PINGATE.subtitle}
           </p>
         </div>
 
@@ -236,7 +264,7 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             className="absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer outline-none"
-            aria-label="Masukkan 4 digit PIN"
+            aria-label={CONFIG_PINGATE.subtitle}
             autoComplete="off"
             data-lpignore="true"
           />
@@ -289,7 +317,7 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
         <div className="h-5 text-center mb-6">
           {error && (
             <p className="font-mono text-xs text-accent-strong tracking-wider animate-fade-in">
-              PIN salah. Coba lagi 💔
+              {CONFIG_PINGATE.errorText}
             </p>
           )}
         </div>
@@ -300,7 +328,7 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
           className="focus-ring w-full py-3.5 rounded-pill bg-accent hover:bg-accent-strong text-white font-mono text-xs font-medium tracking-wider shadow-elevation-1 active:scale-95 transition-spring transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
         >
           <HeartIcon size={14} weight="fill" />
-          BUKA KENANGAN KITA
+          {CONFIG_PINGATE.buttonText}
         </button>
 
         {/* Hint toggle */}
@@ -309,7 +337,7 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
             onClick={() => setShowHint(!showHint)}
             className="focus-ring font-mono text-[10px] tracking-wider text-foreground/40 hover:text-accent-strong transition-spring transition-colors uppercase cursor-pointer"
           >
-            {showHint ? "Sembunyikan hint" : "Butuh petunjuk?"}
+            {showHint ? CONFIG_PINGATE.hintButtonHide : CONFIG_PINGATE.hintButtonShow}
           </button>
           <div
             className={`grid transition-[grid-template-rows,opacity] duration-300 ease-spring ${
