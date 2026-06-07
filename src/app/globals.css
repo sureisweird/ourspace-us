@@ -94,6 +94,7 @@
 }
 
 html {
+  background-color: #170E0D;
   scroll-behavior: smooth;
   max-width: 100%;
   overflow-x: hidden;
@@ -106,7 +107,7 @@ html::-webkit-scrollbar {
 }
 
 body {
-  background: var(--background);
+  background-color: #170E0D;
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
   max-width: 100%;
@@ -252,6 +253,12 @@ body::after {
   opacity: 0.035;
   background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='220'%20height='220'%3E%3Cfilter%20id='grain'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.9'%20numOctaves='4'%20stitchTiles='stitch'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23grain)'/%3E%3C/svg%3E");
   background-repeat: repeat;
+}
+
+/* Selama stage gelap (pin/gift) sembunyikan overlay grain agar tidak menambah
+   composite pass fullscreen saat animasi ledakan bunga berjalan. */
+body.stage-dark::after {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
