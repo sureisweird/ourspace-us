@@ -32,9 +32,6 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
     inputRefs.current[0]?.focus();
   }, []);
 
-  // Verifikasi PIN — menerima entri PIN dengan PANJANG DIGIT BERAPA PUN.
-  // PIN benar → simpan sesi + unlock. PIN salah (termasuk <4 atau >4 digit)
-  // → umpan balik kesalahan visual + shake lalu reset input (R4.4, R4.5).
   const handleVerify = useCallback((pin: string) => {
     if (pin === PIN_CODE) {
       sessionStorage.setItem(SESSION_KEY, "true");

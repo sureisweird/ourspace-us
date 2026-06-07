@@ -51,16 +51,16 @@ export default function LoveLetter() {
     const curr = LETTER_TEXT[typedCount];
     
     // Kecepatan menulis manusia (lebih lambat & bervariasi dibanding mengetik keyboard)
-    let delay = 35; // base writing delay
+    let delay = 35;
     
     if (curr === " ") {
-      delay = 70; // spasi (memindahkan pena)
+      delay = 70; 
     } else if (curr === "\n") {
-      delay = 800; // baris baru (jeda untuk paragraf baru)
+      delay = 800; 
     } else if (prev === ",") {
-      delay = 350; // koma (jeda kecil saat membaca/menulis)
+      delay = 350; 
     } else if (".;!?".includes(prev)) {
-      delay = 650; // titik (jeda untuk mencelupkan tinta / bernafas)
+      delay = 650; 
     }
 
     const timer = setTimeout(() => setTypedCount((n) => n + 1), delay);
@@ -105,9 +105,6 @@ export default function LoveLetter() {
         </div>
         <div className="font-cursive text-2xl md:text-3xl text-foreground/85 leading-8 relative z-10">
           {reducedMotion ? (
-            /* Fallback Gerak_Tereduksi (R8.6): render seluruh teks surat
-               langsung di DOM dalam alur normal — tetap terbaca walau
-               styling/animasi typing gagal diterapkan. */
             <div className="flex flex-col gap-6 pl-2">
               {LETTER_PARAGRAPHS.map((para, i) => (
                 <p key={i}>{para}</p>

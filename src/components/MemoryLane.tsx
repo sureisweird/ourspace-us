@@ -151,114 +151,93 @@ export default function MemoryLane() {
     },
     { scope: containerRef }
   );
-
   return (
     <div className="relative w-full">
-      {/* Background Decorative Flowers/Leaves (pointer-events-none, aria-hidden, menumpuk padat hampir memenuhi latar belakang, solid) */}
-      {/* Dipindahkan ke luar <section> agar tidak terpotong oleh paint containment (content-visibility: auto) */}
       <div className="absolute inset-0 pointer-events-none z-0 hidden lg:block" aria-hidden="true">
-        {/* Kiri - Dikosongkan sesuai permintaan user (cukup dari arah kanan saja) */}
-
-        {/* Kanan - Tumpukan padat melimpah meluas ke tengah (hingga 48% lebar layar) dari atas sampai bawah */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_3.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute -right-16 top-[10%] w-56 h-auto -rotate-12"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_1.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[4%] top-[20%] w-60 h-auto rotate-45"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_2.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[10%] top-[30%] w-52 h-auto -rotate-30"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_3.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[16%] top-[40%] w-48 h-auto rotate-15"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_1.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[22%] top-[50%] w-56 h-auto -rotate-45"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_2.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[28%] top-[60%] w-52 h-auto rotate-30"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_3.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[34%] top-[70%] w-44 h-auto -rotate-12"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_3.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[10%] top-[72%] w-56 h-auto rotate-45"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_1.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[18%] top-[76%] w-48 h-auto -rotate-12"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_1.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[40%] top-[80%] w-40 h-auto rotate-25"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_2.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[48%] top-[82%] w-52 h-auto rotate-30"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_3.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[26%] top-[85%] w-44 h-auto -rotate-45"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_1.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute -right-8 top-[88%] w-52 h-auto rotate-15"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_2.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[44%] top-[90%] w-36 h-auto -rotate-15"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_2.svg"
           alt=""
@@ -267,49 +246,42 @@ export default function MemoryLane() {
         />
 
         {/* Bunga Besar Solid */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_big_1.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute -right-12 top-[15%] w-64 h-auto rotate-12 animate-pulse-solid"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_big_1.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[6%] top-[35%] w-60 h-auto -rotate-12 animate-pulse-solid [animation-delay:1.5s]"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_big_1.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[18%] top-[55%] w-64 h-auto rotate-25 animate-pulse-solid [animation-delay:0.8s]"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_big_1.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[30%] top-[75%] w-56 h-auto -rotate-20 animate-pulse-solid [animation-delay:1.9s]"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_big_1.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[5%] top-[82%] w-60 h-auto rotate-45 animate-pulse-solid [animation-delay:1.2s]"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_big_1.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[22%] top-[88%] w-64 h-auto -rotate-12 animate-pulse-solid [animation-delay:0.5s]"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_big_1.svg"
           alt=""
@@ -318,63 +290,54 @@ export default function MemoryLane() {
         />
 
         {/* Bunga Medium Solid */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_medium_2.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[8%] top-[8%] w-44 h-auto rotate-45"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_medium_3.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[12%] top-[28%] w-48 h-auto -rotate-12"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_medium_1.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[24%] top-[48%] w-40 h-auto rotate-15"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_medium_2.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[32%] top-[68%] w-44 h-auto -rotate-30"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_medium_1.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[14%] top-[70%] w-48 h-auto rotate-15"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_medium_2.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[44%] top-[78%] w-40 h-auto -rotate-30"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_medium_3.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[12%] top-[86%] w-44 h-auto rotate-60"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_medium_3.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[38%] top-[88%] w-38 h-auto rotate-10"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_medium_1.svg"
           alt=""
@@ -383,56 +346,48 @@ export default function MemoryLane() {
         />
 
         {/* Benang Sari */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/stamen_3.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[10%] top-[18%] w-12 h-auto rotate-20"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/stamen_4.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[20%] top-[38%] w-14 h-auto -rotate-15"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/stamen_1.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[30%] top-[58%] w-11 h-auto rotate-10"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/stamen_3.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[16%] top-[74%] w-12 h-auto rotate-10"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/stamen_2.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[38%] top-[78%] w-10 h-auto -rotate-25"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/stamen_4.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[28%] top-[84%] w-14 h-auto -rotate-20"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/stamen_1.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[8%] top-[88%] w-10 h-auto rotate-35"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/stamen_2.svg"
           alt=""
@@ -441,35 +396,30 @@ export default function MemoryLane() {
         />
 
         {/* Bunga menembus ke Chapter 2 (overlapping transition) */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_3.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[44%] top-[96%] w-48 h-auto rotate-12"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/stamen_3.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[38%] top-[101%] w-12 h-auto rotate-15"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_big_1.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[36%] top-full w-60 h-auto -rotate-12 animate-pulse-solid [animation-delay:0.8s]"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_medium_2.svg"
           alt=""
           decoding="async"
           className="decor-paint absolute right-[42%] top-[104%] w-44 h-auto rotate-30"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_1.svg"
           alt=""
@@ -550,7 +500,6 @@ export default function MemoryLane() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative aspect-4/3 w-full overflow-hidden bg-background rounded-inner mb-4 border border-accent/15">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={selected.localUrl}
                 alt={selected.caption}
@@ -580,7 +529,7 @@ export default function MemoryLane() {
           </figure>
         </div>
       )}
-    </section>
-  </div>
+      </section>
+    </div>
   );
 }
