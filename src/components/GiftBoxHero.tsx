@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { HeartIcon } from "@phosphor-icons/react";
+import { CONFIG_GIFTBOX } from "@/config/textConfig";
 
 const PETAL_COUNT = 45;
 const PETAL_ASSET_COUNT = 5;
@@ -150,6 +151,30 @@ export default function GiftBoxHero({
   const [playFailed, setPlayFailed] = useState(false);
   const isOpeningRef = useRef(false);
 
+  // Hormati prefers-reduced-motion (AGENTS.md §8) untuk ledakan petal/wash.
+  const prefersReducedRef = useRef(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    prefersReducedRef.current = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+  }, []);
+
+  const releaseOpenWillChange = () => {
+    const targets = [
+      boxWrapperRef.current,
+      envelopeBodyRef.current,
+      envelopeFlapRef.current,
+      envelopeSealRef.current,
+      letterSheetRef.current,
+    ].filter((el) => el !== null) as Element[];
+
+    if (targets.length > 0) {
+      gsap.set(targets, { willChange: "auto" });
+    }
+    gsap.set(".petal-particle", { willChange: "auto" });
+  };
+
   // Floating ambient animation for the envelope wrapper
   useGSAP(
     () => {
@@ -201,8 +226,11 @@ export default function GiftBoxHero({
     () => {
       if (!isClicked || petals.length === 0) return;
 
+      const reduced = prefersReducedRef.current;
+
       const tl = gsap.timeline({
         onComplete: () => {
+          releaseOpenWillChange();
           setIsOpened(true);
           onOpenComplete();
         },
@@ -260,8 +288,8 @@ export default function GiftBoxHero({
           rotation: (i) => petals[i].rotation + 360,
           scale: (i) => petals[i].scale,
           opacity: 0.9,
-          duration: 1.2,
-          stagger: { each: 0.005, from: "random" },
+          duration: reduced ? 0.4 : 1.2,
+          stagger: reduced ? 0 : { each: 0.012, from: "random" },
           ease: EASE_OUT,
           force3D: true,
         },
@@ -279,8 +307,8 @@ export default function GiftBoxHero({
           scale: (i) => WASH_FLOWERS[i].scale,
           rotation: (i) => WASH_FLOWERS[i].rotation,
           opacity: 1,
-          duration: 1.2,
-          stagger: { each: 0.02, from: "center" },
+          duration: reduced ? 0.5 : 1.2,
+          stagger: reduced ? 0 : { each: 0.035, from: "center" },
           ease: "power2.out",
           force3D: true,
         },
@@ -313,8 +341,15 @@ export default function GiftBoxHero({
     () => {
       if (!isTransitioning) return;
 
+      // Pastikan elemen scatter dipromosikan jadi GPU layer selama transisi
+      // (will-change wash-flower sudah dilepas? set ulang agar geser kiri/kanan mulus).
+      gsap.set([".wash-flower", "#wash-bg"], { willChange: "transform, opacity" });
+
       const exitTl = gsap.timeline({
-        onComplete: onTransitionComplete,
+        onComplete: () => {
+          gsap.set([".wash-flower", "#wash-bg"], { willChange: "auto" });
+          onTransitionComplete?.();
+        },
       });
 
       exitTl.to(
@@ -424,14 +459,14 @@ export default function GiftBoxHero({
             onClick={handleOpenBox}
           >
             <span className="font-mono text-xs tracking-[0.3em] uppercase text-accent block mb-3 animate-pulse">
-              An anniversary letter for you
+              {CONFIG_GIFTBOX.envelopeSub}
             </span>
             <h1 className="font-cursive text-4xl md:text-5xl text-background">
-              Tap to open our memories
+              {CONFIG_GIFTBOX.envelopeTitle}
             </h1>
             {playFailed && (
               <span className="font-mono text-[0.7rem] tracking-[0.2em] uppercase text-accent-strong block mt-4 animate-fade-in">
-                Ketuk sekali lagi untuk membuka
+                {CONFIG_GIFTBOX.envelopeRetry}
               </span>
             )}
           </div>
@@ -454,12 +489,12 @@ export default function GiftBoxHero({
               }}
             >
               <div className="flex-1 flex flex-col items-center justify-center text-center">
-                <span className="font-cursive text-xl md:text-2xl text-accent-strong">Dear Favorite Person,</span>
+                <span className="font-cursive text-xl md:text-2xl text-accent-strong">{CONFIG_GIFTBOX.letterDear}</span>
                 <p className="font-sans text-[8px] md:text-[9px] uppercase tracking-widest text-foreground/60 mt-2">
-                  Hari ini adalah hari istimewa kita.
+                  {CONFIG_GIFTBOX.letterSub}
                 </p>
                 <p className="font-sans text-[7px] md:text-[8px] uppercase tracking-wider text-foreground/40 mt-1">
-                  Mari kita buka lembaran memori indah kita...
+                  {CONFIG_GIFTBOX.letterText}
                 </p>
               </div>
               <div className="flex justify-center">
@@ -517,6 +552,7 @@ export default function GiftBoxHero({
                 alt=""
                 aria-hidden="true"
                 draggable={false}
+                decoding="async"
                 className="petal-particle absolute w-14 h-14 pointer-events-none object-contain opacity-0 scale-0"
                 style={{
                   left: "calc(50% - 28px)",
@@ -545,6 +581,7 @@ export default function GiftBoxHero({
             alt=""
             aria-hidden="true"
             draggable={false}
+            decoding="async"
             className="wash-flower absolute w-48 h-48 md:w-64 md:h-64 object-contain pointer-events-none"
             style={{
               left: "50%",
