@@ -3,6 +3,10 @@
 import { useState, useEffect, useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+// AGENTS.md §5: ScrollTrigger harus di-register di level module
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 const ASSET_BASE = "/assets/hibiscus_flower";
 
@@ -21,6 +25,7 @@ interface PetalItem {
 
 export default function AmbientPetals({ solid = false }: { solid?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const tweensRef = useRef<gsap.core.Tween[]>([]);
   const [mountedPetals, setMountedPetals] = useState<PetalItem[]>([]);
 
   // React 19: Pastikan list di-generate di side effect agar rendering pure
@@ -66,8 +71,23 @@ export default function AmbientPetals({ solid = false }: { solid?: boolean }) {
       }
 
       // Jalankan animasi mengambang multi-arah
+      tweensRef.current = [];
       elements.forEach((el) => {
         animatePetal(el);
+      });
+
+      // Pause/resume tween berdasarkan visibilitas viewport container instance ini.
+      // Meninggalkan viewport ke arah manapun menjeda kelopak; masuk kembali
+      // dari arah manapun melanjutkannya. useGSAP context me-revert trigger ini
+      // otomatis saat unmount / perubahan dependency (AGENTS.md §5).
+      ScrollTrigger.create({
+        trigger: containerRef.current,
+        start: "top bottom",
+        end: "bottom top",
+        onEnter: () => tweensRef.current.forEach((t) => t.resume()),
+        onEnterBack: () => tweensRef.current.forEach((t) => t.resume()),
+        onLeave: () => tweensRef.current.forEach((t) => t.pause()),
+        onLeaveBack: () => tweensRef.current.forEach((t) => t.pause()),
       });
 
       function animatePetal(el: HTMLElement) {
@@ -124,7 +144,7 @@ export default function AmbientPetals({ solid = false }: { solid?: boolean }) {
         });
 
         // Animasi meluncur melintasi layar
-        gsap.to(el, {
+        const tween = gsap.to(el, {
           x: endX,
           y: endY,
           rotation: `+=${360 + Math.random() * 360}`,
@@ -132,6 +152,7 @@ export default function AmbientPetals({ solid = false }: { solid?: boolean }) {
           rotationY: `+=${180 + Math.random() * 360}`,
           duration: duration,
           ease: "none",
+          force3D: true,
           onStart: () => {
             // Efek memudar masuk secara lembut saat baru lahir
             gsap.to(el, { opacity: solid ? 1 : 0.5, duration: 3, ease: "power1.inOut" });
@@ -141,6 +162,11 @@ export default function AmbientPetals({ solid = false }: { solid?: boolean }) {
             animatePetal(el);
           },
         });
+
+        // Simpan tween hidup berdasarkan index elemen; tween hasil re-loop
+        // akan menggantikan referensi lama agar pause/resume selalu tepat sasaran
+        const idx = elements.indexOf(el);
+        tweensRef.current[idx] = tween;
       }
     },
     { scope: containerRef, dependencies: [mountedPetals] }
@@ -158,7 +184,8 @@ export default function AmbientPetals({ solid = false }: { solid?: boolean }) {
           key={petal.id}
           src={`${ASSET_BASE}/${petal.asset}`}
           alt=""
-          className="ambient-particle absolute w-12 h-auto select-none opacity-0"
+          decoding="async"
+          className="ambient-particle decor-paint absolute w-12 h-auto select-none opacity-0"
           style={{
             willChange: "transform",
             backfaceVisibility: "hidden",
