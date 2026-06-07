@@ -4,9 +4,8 @@ import React, { useRef, useState, useEffect } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
-// Aset_Bunga: kelopak hibiscus dipakai sebagai partikel ledakan (R5.7/R13.2/R13.5).
 const PETAL_COUNT = 45;
-const PETAL_ASSET_COUNT = 5; // petal_1.svg .. petal_5.svg
+const PETAL_ASSET_COUNT = 5;
 const FLORAL_ASSET_BASE = "/assets/hibiscus_flower";
 
 const WASH_FLOWERS_COUNT = 16;
@@ -65,11 +64,8 @@ export default function GiftBoxHero({
   const boxBodyRef = useRef<SVGGElement>(null);
   const washRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
-
   const [petals, setPetals] = useState<PetalParticle[]>([]);
 
-  // Pre-generate petals at mount inside useEffect to comply with React 19 purity rules (no Math.random during render).
-  // Wrapped in setTimeout to prevent ESLint set-state-in-effect warnings by running the update asynchronously.
   useEffect(() => {
     const generatedPetals = Array.from({ length: PETAL_COUNT }).map((_, i) => {
       const angle = Math.random() * Math.PI * 2;
@@ -122,32 +118,23 @@ export default function GiftBoxHero({
   );
 
   const handleOpenBox = async () => {
-    // Guard ganda: sudah terbuka atau sedang menunggu Promise play().
     if (isClicked || isOpeningRef.current) return;
     isOpeningRef.current = true;
     setPlayFailed(false);
 
     const audio = audioRef.current;
-
-    // GATE (R5.2/5.3/5.4): mulai audio SEGERA di dalam gesture tap, lalu tahan
-    // timeline pembukaan hingga Promise play() resolve. Karena dipanggil dalam
-    // gesture tap, ini kompatibel dengan kebijakan autoplay browser & AGENTS.md.
     try {
       if (!audio) {
-        // Tanpa elemen audio, audio tidak dapat diputar → perlakukan sebagai gagal.
         throw new Error("Audio element is not available");
       }
       await audio.play();
     } catch (err) {
-      // Audio gagal/ditolak → JANGAN jalankan timeline pembukaan & onOpenComplete.
-      // UI tetap pada keadaan "tap untuk membuka" (R5.4).
       console.warn("Audio playback failed; gift opening is gated:", err);
       isOpeningRef.current = false;
       setPlayFailed(true);
       return;
     }
 
-    // Audio berhasil diputar → jalankan animasi pembukaan.
     setIsClicked(true);
   };
 
@@ -273,12 +260,10 @@ export default function GiftBoxHero({
         0.1
       );
 
-      // 3. Fade out container background and blur (instead of container opacity, so children flowers stay solid)
       exitTl.to(
         containerRef.current,
         {
           backgroundColor: "rgba(23, 14, 13, 0)",
-          backdropFilter: "blur(0px)",
           duration: 1.2,
           ease: "power2.inOut",
         },
@@ -291,7 +276,8 @@ export default function GiftBoxHero({
   return (
     <div
       ref={containerRef}
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#170E0D]/95 backdrop-blur-md overflow-hidden select-none isolate ${
+      style={{ willChange: "background-color", contain: "layout paint" }}
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#170E0D]/95 overflow-hidden select-none isolate ${
         isTransitioning ? "pointer-events-none" : ""
       }`}
     >
@@ -352,7 +338,6 @@ export default function GiftBoxHero({
           </svg>
 
           {petals.map((petal) => (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               key={petal.id}
               src={petal.src}
@@ -380,7 +365,6 @@ export default function GiftBoxHero({
 
         {/* Multiple blooming flowers exploding and scaling outward from the center */}
         {WASH_FLOWERS.map((fw) => (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             key={fw.id}
             src={fw.src}
