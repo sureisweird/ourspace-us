@@ -166,7 +166,8 @@ export default function SplitContent() {
     <section
       ref={containerRef}
       id="milestones"
-      className="py-32 px-6 w-full relative overflow-hidden z-10"
+      className="cv-gate py-32 px-6 w-full relative overflow-hidden z-10"
+      style={{ containIntrinsicSize: "auto 1600px" }}
     >
       {/* Background Decorative Flowers/Leaves (pointer-events-none, aria-hidden, menumpuk padat hampir memenuhi latar belakang, solid) */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden hidden lg:block" aria-hidden="true">
@@ -175,61 +176,71 @@ export default function SplitContent() {
         <img
           src="/assets/hibiscus_flower/leaf_3.svg"
           alt=""
-          className="absolute -left-16 top-[32%] w-56 h-auto -rotate-12 animate-sway"
+          decoding="async"
+          className="decor-paint absolute -left-16 top-[32%] w-56 h-auto -rotate-12"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_1.svg"
           alt=""
-          className="absolute left-[4%] top-[38%] w-60 h-auto rotate-45 animate-sway [animation-delay:0.5s]"
+          decoding="async"
+          className="decor-paint absolute left-[4%] top-[38%] w-60 h-auto rotate-45"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_2.svg"
           alt=""
-          className="absolute left-[10%] top-[44%] w-52 h-auto -rotate-30 animate-sway [animation-delay:1.2s]"
+          decoding="async"
+          className="decor-paint absolute left-[10%] top-[44%] w-52 h-auto -rotate-30"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_3.svg"
           alt=""
-          className="absolute left-[16%] top-[50%] w-48 h-auto rotate-15 animate-sway [animation-delay:0.3s]"
+          decoding="async"
+          className="decor-paint absolute left-[16%] top-[50%] w-48 h-auto rotate-15"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_1.svg"
           alt=""
-          className="absolute left-[22%] top-[56%] w-56 h-auto -rotate-45 animate-sway [animation-delay:0.9s]"
+          decoding="async"
+          className="decor-paint absolute left-[22%] top-[56%] w-56 h-auto -rotate-45"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_2.svg"
           alt=""
-          className="absolute left-[28%] top-[62%] w-52 h-auto rotate-30 animate-sway [animation-delay:1.5s]"
+          decoding="async"
+          className="decor-paint absolute left-[28%] top-[62%] w-52 h-auto rotate-30"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_3.svg"
           alt=""
-          className="absolute left-[34%] top-[68%] w-44 h-auto -rotate-12 animate-sway [animation-delay:0.7s]"
+          decoding="async"
+          className="decor-paint absolute left-[34%] top-[68%] w-44 h-auto -rotate-12"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_1.svg"
           alt=""
-          className="absolute left-[40%] top-[74%] w-40 h-auto rotate-25 animate-sway [animation-delay:1.1s]"
+          decoding="async"
+          className="decor-paint absolute left-[40%] top-[74%] w-40 h-auto rotate-25"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_2.svg"
           alt=""
-          className="absolute left-[44%] top-[80%] w-36 h-auto -rotate-15 animate-sway [animation-delay:0.4s]"
+          decoding="async"
+          className="decor-paint absolute left-[44%] top-[80%] w-36 h-auto -rotate-15"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/leaf_3.svg"
           alt=""
-          className="absolute left-[46%] top-[86%] w-32 h-auto rotate-12 animate-sway [animation-delay:0.8s]"
+          decoding="async"
+          className="decor-paint absolute left-[46%] top-[86%] w-32 h-auto rotate-12"
         />
 
         {/* Bunga Besar Solid */}
@@ -237,31 +248,36 @@ export default function SplitContent() {
         <img
           src="/assets/hibiscus_flower/flower_big_1.svg"
           alt=""
-          className="absolute -left-12 top-[35%] w-64 h-auto rotate-12 animate-pulse-solid"
+          decoding="async"
+          className="decor-paint absolute -left-12 top-[35%] w-64 h-auto rotate-12 animate-pulse-solid"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_big_1.svg"
           alt=""
-          className="absolute left-[6%] top-[48%] w-60 h-auto -rotate-12 animate-pulse-solid [animation-delay:1.5s]"
+          decoding="async"
+          className="decor-paint absolute left-[6%] top-[48%] w-60 h-auto -rotate-12 animate-pulse-solid [animation-delay:1.5s]"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_big_1.svg"
           alt=""
-          className="absolute left-[18%] top-[60%] w-64 h-auto rotate-25 animate-pulse-solid [animation-delay:0.8s]"
+          decoding="async"
+          className="decor-paint absolute left-[18%] top-[60%] w-64 h-auto rotate-25 animate-pulse-solid [animation-delay:0.8s]"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_big_1.svg"
           alt=""
-          className="absolute left-[30%] top-[72%] w-56 h-auto -rotate-20 animate-pulse-solid [animation-delay:1.9s]"
+          decoding="async"
+          className="decor-paint absolute left-[30%] top-[72%] w-56 h-auto -rotate-20 animate-pulse-solid [animation-delay:1.9s]"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_big_1.svg"
           alt=""
-          className="absolute left-[42%] top-[84%] w-50 h-auto rotate-15 animate-pulse-solid [animation-delay:1.1s]"
+          decoding="async"
+          className="decor-paint absolute left-[42%] top-[84%] w-50 h-auto rotate-15 animate-pulse-solid [animation-delay:1.1s]"
         />
 
         {/* Bunga Medium Solid */}
@@ -269,37 +285,43 @@ export default function SplitContent() {
         <img
           src="/assets/hibiscus_flower/flower_medium_2.svg"
           alt=""
-          className="absolute left-[8%] top-[32%] w-44 h-auto rotate-45 animate-sway"
+          decoding="async"
+          className="decor-paint absolute left-[8%] top-[32%] w-44 h-auto rotate-45"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_medium_3.svg"
           alt=""
-          className="absolute left-[12%] top-[42%] w-48 h-auto -rotate-12 animate-sway [animation-delay:0.6s]"
+          decoding="async"
+          className="decor-paint absolute left-[12%] top-[42%] w-48 h-auto -rotate-12"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_medium_1.svg"
           alt=""
-          className="absolute left-[24%] top-[52%] w-40 h-auto rotate-15 animate-sway [animation-delay:1.0s]"
+          decoding="async"
+          className="decor-paint absolute left-[24%] top-[52%] w-40 h-auto rotate-15"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_medium_2.svg"
           alt=""
-          className="absolute left-[32%] top-[64%] w-44 h-auto -rotate-30 animate-sway [animation-delay:0.4s]"
+          decoding="async"
+          className="decor-paint absolute left-[32%] top-[64%] w-44 h-auto -rotate-30"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_medium_3.svg"
           alt=""
-          className="absolute left-[38%] top-[76%] w-38 h-auto rotate-10 animate-sway [animation-delay:1.3s]"
+          decoding="async"
+          className="decor-paint absolute left-[38%] top-[76%] w-38 h-auto rotate-10"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/flower_medium_1.svg"
           alt=""
-          className="absolute left-[44%] top-[88%] w-36 h-auto -rotate-15 animate-sway [animation-delay:1.7s]"
+          decoding="async"
+          className="decor-paint absolute left-[44%] top-[88%] w-36 h-auto -rotate-15"
         />
 
         {/* Benang Sari */}
@@ -307,25 +329,29 @@ export default function SplitContent() {
         <img
           src="/assets/hibiscus_flower/stamen_3.svg"
           alt=""
-          className="absolute left-[10%] top-[36%] w-12 h-auto rotate-20 animate-sway"
+          decoding="async"
+          className="decor-paint absolute left-[10%] top-[36%] w-12 h-auto rotate-20"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/stamen_4.svg"
           alt=""
-          className="absolute left-[20%] top-[54%] w-14 h-auto -rotate-15 animate-sway"
+          decoding="async"
+          className="decor-paint absolute left-[20%] top-[54%] w-14 h-auto -rotate-15"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/stamen_1.svg"
           alt=""
-          className="absolute left-[30%] top-[70%] w-11 h-auto rotate-10 animate-sway [animation-delay:0.5s]"
+          decoding="async"
+          className="decor-paint absolute left-[30%] top-[70%] w-11 h-auto rotate-10"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/hibiscus_flower/stamen_2.svg"
           alt=""
-          className="absolute left-[38%] top-[82%] w-10 h-auto -rotate-25 animate-sway [animation-delay:1.1s]"
+          decoding="async"
+          className="decor-paint absolute left-[38%] top-[82%] w-10 h-auto -rotate-25"
         />
 
         {/* Kelopak Melayang Bebas (GSAP Ambient Petals - Solid) */}

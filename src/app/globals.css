@@ -6,19 +6,12 @@
 }
 
 @theme inline {
-  /* ── Warna terkendali (R1.1) ──────────────────────────────────
-     Maks. dua aksen + satu surface, di atas latar netral + teks utama.
-     Kontras teks body (#2A1F1D di atas #FFFBF9 / #FFFFFF) ≈ 14:1,
-     jauh melampaui ambang 4.5:1 (R10.4). */
-  --color-background: var(--background);   /* #FFFBF9 — latar netral hangat */
-  --color-foreground: var(--foreground);   /* #2A1F1D — teks utama          */
-  --color-surface: #FFFFFF;                 /* satu warna permukaan (kartu)  */
-  --color-accent: #E5989B;                  /* aksen 1 — rose primer (CTA)   */
-  --color-accent-strong: #B56576;           /* aksen 2 — rose pekat          */
+  --color-background: var(--background);   
+  --color-foreground: var(--foreground);  
+  --color-surface: #FFFFFF;                
+  --color-accent: #E5989B;                 
+  --color-accent-strong: #B56576;          
 
-  /* ── Skala tipografi ≥5 tingkat (R1.2) ────────────────────────
-     Tersedia sebagai utility: text-display, text-heading, dst.
-     Gaya "San Francisco-like": sans tegas + tracking rapat (R1.5). */
   --text-display: clamp(2.5rem, 6vw, 4.5rem);
   --text-display--line-height: 1.05;
   --text-display--letter-spacing: -0.02em;
@@ -42,16 +35,14 @@
   --text-caption--letter-spacing: 0.01em;
 
   /* ── Skala spacing (R1.3) — utility: p-section, gap-block, dst. */
-  --spacing-section: 6rem;   /* jarak antar-section yang lapang */
-  --spacing-block: 2.5rem;   /* jarak antar-blok dalam section  */
-  --spacing-inline: 1.25rem; /* jarak inline / padding kartu     */
+  --spacing-section: 6rem;   
+  --spacing-block: 2.5rem;   
+  --spacing-inline: 1.25rem; 
 
-  /* ── Skala radius (R1.3) — utility: rounded-pill, rounded-card. */
-  --radius-pill: 9999px;     /* tombol bergaya Apple (full)     */
-  --radius-card: 1.5rem;     /* sudut kartu                      */
-  --radius-inner: 0.75rem;   /* elemen di dalam kartu            */
+  --radius-pill: 9999px;     
+  --radius-card: 1.5rem;     
+  --radius-inner: 0.75rem;   
 
-  /* ── Bayangan berlapis ≥3 tingkat (R1.4) — utility: shadow-elevation-2. */
   --shadow-elevation-1:
     0 1px 2px rgba(42, 31, 29, 0.04),
     0 2px 8px rgba(42, 31, 29, 0.06);
@@ -62,29 +53,15 @@
     0 12px 32px rgba(42, 31, 29, 0.08),
     0 32px 80px rgba(42, 31, 29, 0.12);
 
-  /* ── Blur untuk Frosted_Glass (R2.1) — utility: backdrop-blur-glass. */
   --blur-glass: 16px;
 
-  /* ── Easing default bergaya Apple "spring" (R9.1) ─────────────────
-     Kurva ease-out halus untuk transisi masuk & mikro-interaksi.
-     Diekspos sebagai utility Tailwind `ease-spring` dan CSS var
-     `--ease-spring` agar komponen bisa memakainya secara konsisten. */
   --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
 
-  /* ── Font (sudah ada — dipertahankan) ─────────────────────────── */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-cursive: var(--font-dancing-script);
 }
 
-/* ──────────────────────────────────────────────────────────────────
-   Utilitas styling Sistem_Desain (Tailwind v4 @utility)
-   ────────────────────────────────────────────────────────────────── */
-
-/* Frosted_Glass dasar (R2.1): latar semi-transparan + backdrop blur +
-   border tipis. Dipakai oleh Navigasi, kartu PinGate, latar Lightbox, dst.
-   Warna diturunkan dari Token_Desain (surface + foreground) agar tetap
-   konsisten dengan Sistem_Desain. */
 @utility glass-surface {
   background-color: color-mix(in srgb, var(--color-surface) 65%, transparent);
   backdrop-filter: blur(var(--blur-glass)) saturate(140%);
@@ -92,9 +69,6 @@
   border: 1px solid color-mix(in srgb, var(--color-foreground) 8%, transparent);
 }
 
-/* Indikator fokus keyboard terlihat (R10.5). Hanya tampil pada
-   :focus-visible agar tidak mengganggu interaksi pointer/mouse.
-   Dipakai pada elemen interaktif (tombol, tautan, kartu, input). */
 @utility focus-ring {
   &:focus-visible {
     outline: 2px solid var(--color-accent-strong);
@@ -103,11 +77,16 @@
   }
 }
 
-/* Easing default "spring" sebagai utility transisi siap pakai (R9.1).
-   Komponen cukup menambahkan kelas `transition-spring` untuk memakai
-   kurva ease-out standar pada transisi masuk & mikro-interaksi. */
 @utility transition-spring {
   transition-timing-function: var(--ease-spring);
+}
+
+@utility cv-gate {
+  content-visibility: auto;
+}
+
+@utility decor-paint {
+  contain: paint;
 }
 
 html {
@@ -183,6 +162,11 @@ body::-webkit-scrollbar {
 
 .animate-pulse-solid {
   animation: pulse-solid 12s ease-in-out infinite;
+}
+
+.animate-sway,
+.animate-pulse-solid {
+  will-change: transform;
 }
 
 @keyframes fade-in {
@@ -261,15 +245,12 @@ body::after {
   inset: 0;
   z-index: 100;
   pointer-events: none;
-  opacity: 0.07;
-  mix-blend-mode: soft-light;
+  opacity: 0.035;
   background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='220'%20height='220'%3E%3Cfilter%20id='grain'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.9'%20numOctaves='4'%20stitchTiles='stitch'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23grain)'/%3E%3C/svg%3E");
   background-repeat: repeat;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  /* Matikan SEMUA animasi ambient berulang berbasis CSS/keyframe (R9.3, R13.8):
-     daun mengambang, denyut lambat, ayunan dekorasi bunga, dan bounce sparkle. */
   .animate-sway,
   .animate-leaf,
   .animate-pulse-slow,
@@ -279,15 +260,7 @@ body::after {
   .animate-blink {
     animation: none !important;
   }
-
-  /* Equalizer mini iPod (eq-bounce) di-set via inline style `animation`,
-     jadi dimatikan lewat selector atribut + !important agar override. */
   [style*="eq-bounce"] {
     animation: none !important;
   }
-
-  /* Catatan: rotasi vinyl dijalankan via GSAP (transform inline), sehingga
-     dihentikan di tingkat komponen lewat pemeriksaan prefers-reduced-motion
-     (pola `reducedMotion` di MusicLetterFooter). CSS di sini menjamin seluruh
-     animasi ambient berbasis CSS/keyframe ikut dinonaktifkan. */
 }

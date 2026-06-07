@@ -18,7 +18,7 @@ export default function MusicLetterFooter({ audioRef }: MusicLetterFooterProps) 
   return (
     <footer
       id="letter"
-      className="py-32 px-6 max-w-7xl mx-auto relative z-10 border-t border-foreground/10"
+      className="py-32 px-6 md:px-12 max-w-5xl mx-auto w-full relative z-10 border-t border-foreground/10"
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
         <IphoneMusicPlayer audioRef={audioRef} />
