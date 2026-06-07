@@ -342,7 +342,7 @@ export default function SplitContent() {
             <div className="relative w-72 h-96 group/bouquet">
               {/* Ambient Glow Orb behind the card */}
               <div 
-                className="absolute -inset-4 bg-radial-gradient from-accent/20 via-blush/10 to-transparent rounded-[3rem] blur-2xl opacity-80 pointer-events-none group-hover/bouquet:opacity-100 transition-opacity duration-700" 
+                className="absolute -inset-4 bg-radial from-accent/20 via-[#FFC8DD]/10 to-transparent rounded-[3rem] blur-2xl opacity-80 pointer-events-none group-hover/bouquet:opacity-100 transition-opacity duration-700" 
                 aria-hidden="true" 
               />
               
