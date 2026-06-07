@@ -17,12 +17,11 @@ const WASH_FLOWERS = Array.from({ length: WASH_FLOWERS_COUNT }).map((_, i) => {
   const index = isOuter ? i - 4 : i;
   const angle = (index / count) * Math.PI * 2 + (isOuter ? Math.PI / 6 : 0);
   const distance = isOuter ? 45 : 18;
-  
-  let src = `${FLORAL_ASSET_BASE}/flower_medium_1.svg`;
-  if (i % 4 === 0) src = `${FLORAL_ASSET_BASE}/flower_big_1.svg`;
-  else if (i % 4 === 1) src = `${FLORAL_ASSET_BASE}/flower_medium_1.svg`;
-  else if (i % 4 === 2) src = `${FLORAL_ASSET_BASE}/flower_medium_2.svg`;
-  else src = `${FLORAL_ASSET_BASE}/flower_medium_3.svg`;
+  let src = `${FLORAL_ASSET_BASE}/flower_medium_1.webp`;
+  if (i % 4 === 0) src = `${FLORAL_ASSET_BASE}/flower_big_1.webp`;
+  else if (i % 4 === 1) src = `${FLORAL_ASSET_BASE}/flower_medium_1.webp`;
+  else if (i % 4 === 2) src = `${FLORAL_ASSET_BASE}/flower_medium_2.webp`;
+  else src = `${FLORAL_ASSET_BASE}/flower_medium_3.webp`;
 
   return {
     id: i,
@@ -114,7 +113,9 @@ export default function GiftBoxHero({
         y: Math.sin(angle) * distance,
         rotation: Math.random() * 360,
         scale: 0.8 + Math.random() * 1.0,
-        src: `${FLORAL_ASSET_BASE}/petal_${assetIndex}.svg`,
+        // WebP ter-rasterize (scripts/convert-wash-flowers.mjs): hindari biaya
+        // rasterisasi SVG ratusan-path untuk 45 petal saat burst keluar amplop.
+        src: `${FLORAL_ASSET_BASE}/petal_${assetIndex}.webp`,
       };
     });
 
@@ -413,11 +414,14 @@ export default function GiftBoxHero({
         isTransitioning ? "pointer-events-none" : ""
       }`}
     >
-      {/* Ambient background blobs */}
+      {/* Ambient background blobs.
+          Saat amplop dibuka (isClicked) animasi pulse dihentikan agar tidak ada
+          repaint elemen ber-blur saat fase wash/transisi berlangsung. Elemen
+          tetap dirender (toh segera tertutup wash) sehingga tidak ada "pop". */}
       <div className="absolute inset-0 pointer-events-none opacity-20">
-        <div className="absolute top-[10%] left-[15%] w-8 h-8 rounded-full bg-accent blur-sm animate-pulse-slow" />
-        <div className="absolute bottom-[20%] right-[10%] w-12 h-12 rounded-full bg-surface blur-md animate-pulse-slow" />
-        <div className="absolute top-[40%] right-[25%] w-6 h-6 rounded-full bg-accent-strong blur-sm animate-pulse-slow" />
+        <div className={`absolute top-[10%] left-[15%] w-8 h-8 rounded-full bg-accent blur-sm ${isClicked ? "" : "animate-pulse-slow"}`} />
+        <div className={`absolute bottom-[20%] right-[10%] w-12 h-12 rounded-full bg-surface blur-md ${isClicked ? "" : "animate-pulse-slow"}`} />
+        <div className={`absolute top-[40%] right-[25%] w-6 h-6 rounded-full bg-accent-strong blur-sm ${isClicked ? "" : "animate-pulse-slow"}`} />
       </div>
 
       {/* Twinkling ambient stars */}
@@ -565,6 +569,8 @@ export default function GiftBoxHero({
                 aria-hidden="true"
                 draggable={false}
                 decoding="async"
+                width={384}
+                height={384}
                 className="petal-particle absolute w-14 h-14 pointer-events-none object-contain opacity-0 scale-0"
                 style={{
                   left: "calc(50% - 28px)",
@@ -593,6 +599,8 @@ export default function GiftBoxHero({
             aria-hidden="true"
             draggable={false}
             decoding="async"
+            width={1024}
+            height={1024}
             className="wash-flower absolute w-48 h-48 md:w-64 md:h-64 object-contain pointer-events-none"
             style={{
               left: "50%",

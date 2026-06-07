@@ -28,10 +28,6 @@ export default function Home() {
   const headerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // iOS mewarnai area di balik status bar/toolbar (pita atas-bawah) dengan warna
-  // <body>. Agar pita menyatu (tidak tampak terpotong) di stage gelap, samakan
-  // warna body/html dengan stage: gelap saat pin/gift, krem saat utama.
-  // Akses elemen langsung (bukan querySelector) sesuai AGENTS.md.
   useEffect(() => {
     if (!giftTransitionComplete) {
       gsap.set([document.documentElement, document.body], {
@@ -43,9 +39,6 @@ export default function Home() {
     }
   }, [giftTransitionComplete]);
 
-  // Saat konten utama mulai terungkap, animasikan warna body gelap→krem dengan
-  // durasi/easing yang sinkron dengan animasi keluar GiftBox, sehingga pita ikut
-  // berubah mulus tanpa "flip" mendadak (penyebab bug transisi sebelumnya).
   useEffect(() => {
     if (!readyToReveal) return;
     const tween = gsap.to([document.documentElement, document.body], {
@@ -84,8 +77,6 @@ export default function Home() {
         }
       );
 
-      // Fade hanya elemen above-the-fold (hero) agar tidak memaksa paint
-      // offscreen seukuran seluruh dokumen (penyebab utama frame drop saat masuk).
       gsap.fromTo(
         heroRef.current,
         { opacity: 0 },
