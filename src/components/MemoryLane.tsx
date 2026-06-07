@@ -6,16 +6,8 @@ import { useGSAP } from "@gsap/react";
 import { HeartIcon, XIcon } from "@phosphor-icons/react";
 import PolaroidCard from "./PolaroidCard";
 import AmbientPetals from "./AmbientPetals";
-
-interface PolaroidItem {
-  id: number;
-  localUrl: string;
-  fallbackUrl: string;
-  caption: string;
-  date: string;
-  colSpanClass: string;
-  offsetClass: string;
-}
+import { MEMORIES, USE_API_PROXY } from "@/config/galleryConfig";
+import type { PolaroidItem } from "@/config/galleryConfig";
 
 // Bayangan berlapis (Token_Desain) sebagai literal agar dapat diinterpolasi GSAP.
 // Mengacu pada --shadow-elevation-* di globals.css.
@@ -23,54 +15,6 @@ const SHADOW_REST =
   "0 4px 20px rgba(42, 31, 29, 0.06), 0 12px 40px rgba(42, 31, 29, 0.08)"; // elevation-2
 const SHADOW_HOVER =
   "0 12px 32px rgba(42, 31, 29, 0.08), 0 32px 80px rgba(42, 31, 29, 0.12)"; // elevation-3
-
-const MEMORIES: PolaroidItem[] = [
-  {
-    id: 1,
-    localUrl: "/images/memory-1.jpg",
-    fallbackUrl: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&q=80&w=600",
-    caption: "Where our fingers met, holding on forever",
-    date: "June 14, 2023",
-    colSpanClass: "md:col-span-4",
-    offsetClass: "",
-  },
-  {
-    id: 2,
-    localUrl: "/images/memory-2.jpg",
-    fallbackUrl: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&q=80&w=600",
-    caption: "A quiet sunset toast under gold skies",
-    date: "August 29, 2023",
-    colSpanClass: "md:col-span-4",
-    offsetClass: "",
-  },
-  {
-    id: 3,
-    localUrl: "/images/memory-3.jpg",
-    fallbackUrl: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&q=80&w=600",
-    caption: "Walking through a golden, silent forest",
-    date: "October 12, 2024",
-    colSpanClass: "md:col-span-4",
-    offsetClass: "",
-  },
-  {
-    id: 4,
-    localUrl: "/images/memory-4.jpg",
-    fallbackUrl: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&q=80&w=600",
-    caption: "A simple heart drawn in the seaside sand",
-    date: "January 03, 2025",
-    colSpanClass: "md:col-span-4 md:col-start-3",
-    offsetClass: "",
-  },
-  {
-    id: 5,
-    localUrl: "/images/memory-5.jpg",
-    fallbackUrl: "https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&q=80&w=600",
-    caption: "Soft lighting, flowers, and your sweet laughter",
-    date: "March 18, 2025",
-    colSpanClass: "md:col-span-4",
-    offsetClass: "",
-  },
-];
 
 export default function MemoryLane() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -464,7 +408,7 @@ export default function MemoryLane() {
           <PolaroidCard
             key={memory.id}
             id={memory.id}
-            localUrl={memory.localUrl}
+            localUrl={USE_API_PROXY ? memory.apiUrl : memory.localUrl}
             fallbackUrl={memory.fallbackUrl}
             caption={memory.caption}
             date={memory.date}
@@ -501,7 +445,7 @@ export default function MemoryLane() {
           >
             <div className="relative aspect-4/3 w-full overflow-hidden bg-background rounded-inner mb-4 border border-accent/15">
               <img
-                src={selected.localUrl}
+                src={USE_API_PROXY ? selected.apiUrl : selected.localUrl}
                 alt={selected.caption}
                 className="w-full h-full object-cover"
                 onError={(e) => {
