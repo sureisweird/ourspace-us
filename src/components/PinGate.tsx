@@ -148,7 +148,7 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
       {/* Background kustom dengan blend mode */}
       <div
         className="absolute inset-0 pointer-events-none opacity-25 bg-cover bg-center mix-blend-overlay"
-        style={{ backgroundImage: "url('/assets/background.svg')" }}
+        style={{ backgroundImage: "url('/assets/background.webp')" }}
         aria-hidden="true"
       />
 
@@ -212,7 +212,7 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
       <div className="relative z-10 w-full max-w-sm bg-[#FFFBF9]/95 border border-accent/20 shadow-elevation-3 rounded-card p-8 sm:p-10 flex flex-col items-center">
         {/* Washi Tape (Selotip Kertas) at the top */}
         <img
-          src="/assets/washi_tape.svg"
+          src="/assets/washi_tape.webp"
           alt=""
           className="absolute -top-7 left-1/2 -translate-x-1/2 w-40 h-auto pointer-events-none z-20 select-none -rotate-2"
           aria-hidden="true"
@@ -222,7 +222,7 @@ export default function PinGate({ onUnlocked }: PinGateProps) {
         <div className="flex justify-center mb-6 relative z-10">
           <div className="w-28 h-28 flex items-center justify-center">
             <img
-              src="/assets/heart_lock.svg"
+              src="/assets/heart_lock.webp"
               alt="Heart Lock"
               className="w-full h-full object-contain animate-pulse-slow"
               style={{ animationDuration: "4s" }}
