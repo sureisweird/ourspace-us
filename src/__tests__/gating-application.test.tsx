@@ -114,6 +114,7 @@ vi.mock("@/components/GiftBoxHero", () => ({
 }));
 
 import Home from "@/app/page";
+import { CONFIG_PAGE } from "@/config/textConfig";
 
 /**
  * A Gated_Section must carry the `cv-gate` class AND an inline
@@ -141,7 +142,7 @@ describe("gating application (Requirement 3.1, 3.2)", () => {
     const { container } = render(<Home />);
 
     // The main stage is reached once PinGate/GiftBoxHero (mocked) complete.
-    await screen.findByText("OUR SPACE");
+    await screen.findByText(CONFIG_PAGE.brandName);
 
     const memories = await waitFor(() => {
       const el = container.querySelector("#memories");
