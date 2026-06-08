@@ -524,7 +524,7 @@ export default function GiftBoxHero({
             {/* Envelope Body (Badan Amplop) */}
             <img
               ref={envelopeBodyRef}
-              src="/assets/envelope/envelope_body.svg"
+              src="/assets/envelope/envelope_body.webp"
               alt="Envelope Body"
               onLoad={() => handleLoad("body")}
               className="absolute inset-0 w-full h-full object-fill pointer-events-none z-20"
@@ -533,7 +533,7 @@ export default function GiftBoxHero({
             {/* Envelope Flap (Tutup Amplop) */}
             <img
               ref={envelopeFlapRef}
-              src="/assets/envelope/envelope_flap.svg"
+              src="/assets/envelope/envelope_flap.webp"
               alt="Envelope Flap"
               onLoad={() => handleLoad("flap")}
               className="absolute pointer-events-none z-30"
@@ -550,7 +550,7 @@ export default function GiftBoxHero({
             {/* Envelope Seal (Cap Lilin) */}
             <img
               ref={envelopeSealRef}
-              src="/assets/envelope/envelope_seal.svg"
+              src="/assets/envelope/envelope_seal.webp"
               alt="Wax Seal"
               onLoad={() => handleLoad("seal")}
               className="absolute w-20 h-20 md:w-24 md:h-24 object-contain pointer-events-none z-40"
