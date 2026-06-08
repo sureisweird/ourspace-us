@@ -77,7 +77,6 @@ vi.mock("gsap/ScrollTrigger", () => {
   return { ScrollTrigger, default: ScrollTrigger };
 });
 
-// --- next/image: passthrough <img> (cover art is not a decorative asset) ---
 vi.mock("next/image", () => ({
   default: ({
     src,
@@ -92,9 +91,6 @@ vi.mock("next/image", () => ({
   },
 }));
 
-// --- Stage drivers: skip PIN + gift to reach the main stage ---
-// These components carry NO decorative flower assets of their own, so
-// replacing them does not change the decorative-asset count.
 vi.mock("@/components/PinGate", () => ({
   default: function MockPinGate({ onUnlocked }: { onUnlocked: () => void }) {
     useEffect(() => {
@@ -122,21 +118,12 @@ vi.mock("@/components/GiftBoxHero", () => ({
 }));
 
 import Home from "@/app/page";
+import { CONFIG_PAGE } from "@/config/textConfig";
 
 const HIBISCUS = "/assets/hibiscus_flower/";
 const PETALS_PER_INSTANCE = 18;
 const AMBIENT_INSTANCES = 3; // page + MemoryLane + SplitContent
 const EXPECTED_AMBIENT_PETALS = PETALS_PER_INSTANCE * AMBIENT_INSTANCES; // 54
-
-/**
- * Asset_Baseline_Count — the exact total number of decorative
- * `/assets/hibiscus_flower/` `<img>` elements rendered on the main stage,
- * measured against the current (post-optimization) DOM. The spec describes
- * this as "≈213"; the precise measured value is recorded here as the
- * regression baseline. If a future change alters this number, either an
- * asset was added/removed (update intentionally) or the optimization became
- * destructive (a regression — investigate).
- */
 const ASSET_BASELINE_COUNT = 213;
 
 function decorativeImgs(): HTMLImageElement[] {
@@ -152,12 +139,7 @@ function ambientPetals(): Element[] {
 describe("main stage decorative asset count (Asset_Baseline_Count)", () => {
   it("renders exactly the baseline number of decorative flower <img> elements", async () => {
     render(<Home />);
-
-    // The main stage is reached once PinGate/GiftBoxHero (mocked) complete.
-    await screen.findByText("OUR SPACE");
-
-    // Wait for all three AmbientPetals instances to mount their petals
-    // asynchronously (setTimeout(0) in useEffect).
+    await screen.findByText(CONFIG_PAGE.brandName);
     await waitFor(() => {
       expect(ambientPetals()).toHaveLength(EXPECTED_AMBIENT_PETALS);
     });
